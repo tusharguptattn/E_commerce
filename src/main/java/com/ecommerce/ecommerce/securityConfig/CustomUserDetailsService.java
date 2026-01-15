@@ -1,7 +1,7 @@
 package com.ecommerce.ecommerce.securityConfig;
 
 import com.ecommerce.ecommerce.entity.UserEntity;
-import com.ecommerce.ecommerce.exceptionHanding.UserNotFound;
+import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
 import com.ecommerce.ecommerce.repository.UserRepo;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         UserEntity user = userRepo.findByEmail(username)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return new CustomUserDetails(user);
     }
 }

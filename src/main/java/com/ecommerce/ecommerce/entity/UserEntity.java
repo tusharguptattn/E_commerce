@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce.entity;
 
+import com.ecommerce.ecommerce.enums.Roles;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @Table(name = "user_table",uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
 @Entity
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY,region = "userRegion")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "userRegion")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -27,6 +28,7 @@ public class UserEntity {
 
     private String name;
 
+    @Column(unique = true)
     private String email;
 
     private String password;
@@ -42,7 +44,8 @@ public class UserEntity {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Roles role;
 
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,orphanRemoval = true)

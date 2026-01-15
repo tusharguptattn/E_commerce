@@ -44,14 +44,14 @@ public class PaymentService {
     public PaymentResponseDto initiatePayment(Long userId,Long addressId) {
 
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         AddressEntity address = addressRepo.findById(addressId)
-                .orElseThrow(() -> new AddressNotFound("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         CartEntity cart = user.getCart();
         if (cart.getCartItems().isEmpty()) {
-            throw new EmptyCartException("Cart is empty");
+            throw new ResourceNotFoundException("Cart is empty");
         }
 
         OrderEntity order = new OrderEntity();
@@ -73,7 +73,7 @@ public class PaymentService {
 
         for (CartItemEntity ci : cart.getCartItems()) {
             if (ci.getProduct().getStockPresent() < ci.getQuantity()) {
-                throw new InsufficientStockException(
+                throw new BusinessException(
                         "Insufficient stock for product: " + ci.getProduct().getProductName()
                 );
             }
@@ -122,7 +122,7 @@ public class PaymentService {
 
 
         PaymentEntity payment = paymentRepo.findById(dto.paymentId())
-                .orElseThrow(() -> new PaymentNotFound("Payment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         OrderEntity order = payment.getOrder();
 
@@ -131,7 +131,7 @@ public class PaymentService {
         }
 
         if (!payment.getTransactionId().equals(dto.transactionId())) {
-            throw new TransactionsNotMatch("Invalid transaction");
+            throw new ResourceNotFoundException("Invalid transaction");
         }
 
 
@@ -141,7 +141,7 @@ public class PaymentService {
                 ProductEntity product = item.getProduct();
 
                 if (product.getStockPresent() < item.getQuantity()) {
-                    throw new InsufficientStockException(
+                    throw new BusinessException(
                             "Insufficient stock for product: " + product.getProductName()
                     );
                 }
@@ -161,7 +161,7 @@ public class PaymentService {
             // 🔥 CLEANUP FAILED ORDER
             paymentRepo.delete(payment);
             orderRepo.delete(order);
-            throw new PaymentFailed("Payment failed, order cancelled");
+            throw new ResourceNotFoundException("Payment failed, order cancelled");
         }
 
 
@@ -179,7 +179,7 @@ public class PaymentService {
     public String getPaymentStatus(Long orderId)  {
 
         OrderEntity order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new OrderNotFound("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         PaymentEntity payment = order.getPayment();
 

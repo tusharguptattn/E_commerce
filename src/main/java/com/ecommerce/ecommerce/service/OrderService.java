@@ -11,7 +11,6 @@ import com.ecommerce.ecommerce.exceptionHanding.*;
 import com.ecommerce.ecommerce.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,12 +37,12 @@ public class OrderService {
     public CheckoutPreviewDto previewOrder(Long userId) {
 
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         CartEntity cart = user.getCart();
 
         if (cart.getCartItems().isEmpty()) {
-            throw new EmptyCartException("Cart is empty");
+            throw new ResourceNotFoundException("Cart is empty");
         }
 
         List<OrderItemResponseDto> items = cart.getCartItems()
@@ -53,7 +52,7 @@ public class OrderService {
                     ProductEntity product = ci.getProduct();
 
                     if (product.getStockPresent() < ci.getQuantity()) {
-                        throw new InsufficientStockException(
+                        throw new BusinessException(
                                 "Insufficient stock for product: " + product.getProductName()
                         );
                     }
@@ -78,18 +77,18 @@ public class OrderService {
     @Transactional
     public OrderResponseDto placeOrder(OrderRequestDto dto, Long currentUserId)  {
         UserEntity user = userRepo.findById(currentUserId)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         AddressEntity address = addressRepo.findById(dto.addressId())
-                .orElseThrow(() -> new AddressNotFound("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         if(!address.getUser().getId().equals(user.getId())) {
-            throw new AddressNotBelongToThisUser("Address does not belong to user");
+            throw new ResourceNotFoundException("Address does not belong to user");
         }
 
         CartEntity cart = user.getCart();
         if(cart.getCartItems().isEmpty()){
-            throw new EmptyCartException("Cart is empty");
+            throw new ResourceNotFoundException("Cart is empty");
         }
 
         OrderAddressKey orderAddressKey = new OrderAddressKey();
@@ -130,13 +129,13 @@ public class OrderService {
         Optional<OrderEntity> order = orderRepo.findById(orderId);
         if(order.isPresent()) {
             if (!order.get().getUser().getId().equals(userId)) {
-                throw new OrderNotFound("Order not found for this user");
+                throw new ResourceNotFoundException("Order not found for this user");
             }
 
         }
         return order
                 .map(this::buildResponse)
-                .orElseThrow(() -> new OrderNotFound("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
     }
 
@@ -145,12 +144,11 @@ public class OrderService {
         return orders.map(this::buildResponse);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public OrderResponseDto updateStatus(Long orderId, OrderStatus value) {
         OrderEntity order = orderRepo.findById(orderId).orElse(null);
         if (order == null) {;
-            throw new OrderNotFound("Order not found");
+            throw new ResourceNotFoundException("Order not found");
         }
 
         order.setStatus(value);

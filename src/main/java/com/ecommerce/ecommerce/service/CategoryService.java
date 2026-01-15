@@ -2,7 +2,7 @@ package com.ecommerce.ecommerce.service;
 
 import com.ecommerce.ecommerce.dto.CategoryDto;
 import com.ecommerce.ecommerce.entity.CategoryEntity;
-import com.ecommerce.ecommerce.exceptionHanding.CategoryAlreadyExist;
+import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
 import com.ecommerce.ecommerce.repository.CategoryRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ public class CategoryService {
             categoryByName = categoryRepo.save(categoryEntity);
         }
         else{
-            throw new CategoryAlreadyExist("Category Already Exists");
+            throw new ResourceNotFoundException("Category Already Exists");
         }
         return new CategoryDto(categoryByName.getCategory(),categoryByName.getName());
 

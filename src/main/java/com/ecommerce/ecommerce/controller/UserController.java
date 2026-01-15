@@ -24,9 +24,10 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestBody @Valid UserRequestDto userRequestDto) {
+    public ResponseEntity<String> registerUser(@RequestBody @Valid UserRequestDto userRequestDto) {
         // Registration logic goes here
-        return ResponseEntity.ok(userService.registerUser(userRequestDto));
+        userService.registerUser(userRequestDto);
+        return ResponseEntity.ok("User registered successfully");
     }
 
 
@@ -34,6 +35,7 @@ public class UserController {
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequest dto) {
         return ResponseEntity.ok(userService.login(dto));
     }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logoutUser(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

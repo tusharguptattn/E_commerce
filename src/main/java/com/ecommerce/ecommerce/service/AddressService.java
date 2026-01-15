@@ -3,8 +3,7 @@ package com.ecommerce.ecommerce.service;
 import com.ecommerce.ecommerce.dto.AddressDto;
 import com.ecommerce.ecommerce.entity.AddressEntity;
 import com.ecommerce.ecommerce.entity.UserEntity;
-import com.ecommerce.ecommerce.exceptionHanding.AddressNotFound;
-import com.ecommerce.ecommerce.exceptionHanding.UserNotFound;
+import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
 import com.ecommerce.ecommerce.repository.AddressRepo;
 import com.ecommerce.ecommerce.repository.UserRepo;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ public class AddressService {
     }
     @Transactional
     public AddressDto addAddress(AddressDto addressDto,Long userId)  {
-        UserEntity userEntity = userRepo.findById(userId).orElseThrow(()->new UserNotFound("No user foud with given Id"));
+        UserEntity userEntity = userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("No user foud with given Id"));
         AddressEntity addressEntity = new AddressEntity();
         addressEntity.setCity(addressDto.city());
         addressEntity.setState(addressDto.state());
@@ -41,9 +40,9 @@ public class AddressService {
     }
     @Transactional
     public AddressDto updateAddress(AddressDto addressDto,Long addressId,Long userId)  {
-        AddressEntity addressEntity = addressRepo.findById(addressId).orElseThrow(() -> new AddressNotFound("No address found with this id"));
+        AddressEntity addressEntity = addressRepo.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("No address found with this id"));
         if(!addressEntity.getUser().getId().equals(userId)){
-            throw new AddressNotFound("No address found with this id for this user");
+            throw new ResourceNotFoundException("No address found with this id for this user");
         }
         addressEntity.setStreet(addressDto.street());
         addressEntity.setState(addressDto.state());
@@ -56,9 +55,9 @@ public class AddressService {
     }
 
     public boolean deleteAddress(Long addressId,Long userId){
-        AddressEntity addressEntity = addressRepo.findById(addressId).orElseThrow(() -> new AddressNotFound("No address found with this id"));
+        AddressEntity addressEntity = addressRepo.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("No address found with this id"));
         if(!addressEntity.getUser().getId().equals(userId)){
-            throw new AddressNotFound("No address found with this id for this user");
+            throw new ResourceNotFoundException("No address found with this id for this user");
         }
         addressRepo.deleteById(addressId);
         return true;

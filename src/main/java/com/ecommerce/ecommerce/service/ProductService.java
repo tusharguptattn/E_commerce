@@ -4,8 +4,7 @@ import com.ecommerce.ecommerce.dto.ProductRequestDto;
 import com.ecommerce.ecommerce.dto.ProductResponseDto;
 import com.ecommerce.ecommerce.entity.CategoryEntity;
 import com.ecommerce.ecommerce.entity.ProductEntity;
-import com.ecommerce.ecommerce.exceptionHanding.CategoryNotFound;
-import com.ecommerce.ecommerce.exceptionHanding.ProductNotFound;
+import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
 import com.ecommerce.ecommerce.repository.CategoryRepo;
 import com.ecommerce.ecommerce.repository.ProductRepo;
 import org.springframework.data.domain.Page;
@@ -45,15 +44,15 @@ public class ProductService {
 
 
     public ProductResponseDto getProductById(Long id)  {
-        ProductEntity productEntity = productRepo.findById(id).orElseThrow(() -> new ProductNotFound("Product not Found By Id"));
+        ProductEntity productEntity = productRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not Found By Id"));
         return mapToDto(productEntity);
     }
 
     @Transactional
     public ProductResponseDto updateProduct(Long id , ProductRequestDto productRequestDto)  {
 
-        CategoryEntity category = categoryRepo.findCategoryByName(productRequestDto.category()).orElseThrow(() -> new CategoryNotFound("Category Not Found"));
-        ProductEntity productEntity = productRepo.findById(id).orElseThrow(() -> new ProductNotFound("Product not Found By Id"));
+        CategoryEntity category = categoryRepo.findCategoryByName(productRequestDto.category()).orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+        ProductEntity productEntity = productRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not Found By Id"));
         productEntity.setProductName(productRequestDto.name());
         productEntity.setDescription(productRequestDto.description());
         productEntity.setPrice(productRequestDto.price());
@@ -80,7 +79,7 @@ public class ProductService {
 
 
     public Page<ProductResponseDto> getProductsByCategory(String  category_Name,Pageable pageable)  {
-        categoryRepo.findCategoryByName(category_Name).orElseThrow(()->new CategoryNotFound("Category not Found"));
+        categoryRepo.findCategoryByName(category_Name).orElseThrow(()->new ResourceNotFoundException("Category not Found"));
          return productRepo.findByCategory_Name(category_Name,pageable).map(this::mapToDto);
     }
 

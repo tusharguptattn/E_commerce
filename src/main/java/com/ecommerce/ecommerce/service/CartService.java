@@ -7,9 +7,7 @@ import com.ecommerce.ecommerce.entity.CartEntity;
 import com.ecommerce.ecommerce.entity.CartItemEntity;
 import com.ecommerce.ecommerce.entity.ProductEntity;
 import com.ecommerce.ecommerce.entity.UserEntity;
-import com.ecommerce.ecommerce.exceptionHanding.CartItemNotFound;
-import com.ecommerce.ecommerce.exceptionHanding.ProductNotFound;
-import com.ecommerce.ecommerce.exceptionHanding.UserNotFound;
+import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
 import com.ecommerce.ecommerce.repository.CartItemRepo;
 import com.ecommerce.ecommerce.repository.CartRepo;
 import com.ecommerce.ecommerce.repository.ProductRepo;
@@ -37,11 +35,11 @@ public class CartService {
     @Transactional
     public CartResponseDto addProductToCart(CartItemRequestDto dto,Long userId) {
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         CartEntity cart = user.getCart();
         ProductEntity product = productRepo.findById(dto.productId())
-                .orElseThrow(() -> new ProductNotFound("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (dto.quantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
@@ -67,9 +65,9 @@ public class CartService {
     public CartResponseDto updateQuantity(Long cartItemId, int quantity,Long userId)  {
 
         CartItemEntity item = cartItemRepo.findById(cartItemId)
-                .orElseThrow(() -> new CartItemNotFound("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
         if(!item.getCart().getUser().getId().equals(userId)){
-            throw new CartItemNotFound("Cart item not found for this user");
+            throw new ResourceNotFoundException("Cart item not found for this user");
         }
         item.setQuantity(quantity);
         cartItemRepo.save(item);
@@ -78,9 +76,9 @@ public class CartService {
     }
     @Transactional
     public CartResponseDto removeItem(Long cartItemId,Long userId)  {
-        CartItemEntity item = cartItemRepo.findById(cartItemId).orElseThrow(() -> new CartItemNotFound("Cart item not found"));
+        CartItemEntity item = cartItemRepo.findById(cartItemId).orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
         if (!item.getCart().getUser().getId().equals(userId)) {
-            throw new CartItemNotFound("Cart item not found for user");
+            throw new ResourceNotFoundException("Cart item not found for user");
         }
 
         CartEntity cart = item.getCart();
@@ -91,7 +89,7 @@ public class CartService {
 
     public CartResponseDto getCartByUser(Long userId) {
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new UserNotFound("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return buildCartResponse(user.getCart());
     }
