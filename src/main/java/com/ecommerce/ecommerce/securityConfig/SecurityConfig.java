@@ -3,6 +3,8 @@ package com.ecommerce.ecommerce.securityConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,8 +15,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -25,54 +27,80 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
     }
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http
+        .csrf(csrf -> csrf.disable())
 
-        return http
-                .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
 
-                .authorizeHttpRequests(auth -> auth
+            // ========= PUBLIC APIs =========
+            .requestMatchers(
+                "/api/auth/login",
+                "/api/auth/forgot-password",
+                "/api/auth/reset-password",
+                "/api/register",
 
-                        // ===== ADMIN ONLY =====
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasRole("ADMIN")
+                "/api/products/view/**",
+                "/api/products/ViewProductByIdCustomer/**",
+                "/api/products/ViewAllProductByIdCustomer/**",
+                "/api/products/ViewAllSimilarProducts/**",
 
-                        // ===== AUTHENTICATED USERS =====
-                        .requestMatchers(
-                                "/api/addresses/**",
-                                "/api/cart/**",
-                                "/api/orders/**",
-                                "/api/payments/**"
-                        ).authenticated()
+                "/api/categories/public/**"
+            ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated()
-                        .requestMatchers(HttpMethod.POST," /api/users/**").authenticated()
+            // ========= CUSTOMER APIs =========
+            .requestMatchers(
+                "/api/customers/**",
+                "/api/cart/**",
+                "/api/orders/customer/**",
+                "/api/categories/customer/**"
+            ).hasRole("CUSTOMER")
 
-                        // ===== PUBLIC (GET ONLY) =====
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(
-                                "/api/users/register",
-                                "/api/users/login"
-                        ).permitAll()
+            // ========= SELLER APIs =========
+            .requestMatchers(
+                "/api/sellers/**",
+                "/api/products/**",
+                "/api/variations/**",
+                "/api/orders/seller/**",
+                "/api/orders/changeOrderStatus/**",
+                "/api/categories/seller/**"
+            ).hasRole("SELLER")
 
-                        .anyRequest().denyAll()
-                )
-                .userDetailsService(userDetailsService)
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+            // ========= ADMIN APIs =========
+            .requestMatchers(
+                "/api/admin/**",
+                "/api/categories/admin/**",
+                "/api/orders/admin/**",
+                "/api/products/activateProduct/**",
+                "/api/products/deactivateProduct/**"
+            ).hasRole("ADMIN")
+
+            // ========= EVERYTHING ELSE =========
+            .anyRequest().authenticated()
+        )
+
+        .sessionManagement(sess ->
+            sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
+        .build();
+  }
+
+
+
 
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
 

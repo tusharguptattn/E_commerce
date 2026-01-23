@@ -1,78 +1,64 @@
 package com.ecommerce.ecommerce.exceptionHanding;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.CredentialsExpiredException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UserNotFound.class)
-    public ResponseEntity<String> handleUserNameNotFound(UserNotFound ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-    @ExceptionHandler(ProductNotFound.class)
-    public ResponseEntity<String> handleProductNotFound(ProductNotFound ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(CartItemNotFound.class)
-    public ResponseEntity<String> handleCartItemNotFound(CartItemNotFound ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(AddressNotFound.class)
-    public ResponseEntity<String> handleAddressNotFound(AddressNotFound ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(AddressNotBelongToThisUser.class)
-    public ResponseEntity<String> handleAddressNotBelongToThisUser(AddressNotBelongToThisUser ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(EmptyCartException.class)
-    public ResponseEntity<String> handleEmptyCartException(EmptyCartException ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(PaymentNotFound.class)
-    public ResponseEntity<String> handlePaymentNotFound(PaymentNotFound ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(OrderNotFound.class)
-    public ResponseEntity<String> handleOrderNotFound(OrderNotFound ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-    @ExceptionHandler(TransactionsNotMatch.class)
-    public ResponseEntity<String> handleTransactionsNotMatch(TransactionsNotMatch ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
-    }
-
-    @ExceptionHandler(CategoryNotFound.class)
-    public ResponseEntity<String> handleCategoryNotFound(CategoryNotFound ex) {
+    @ExceptionHandler(BadRequest.class)
+    public ResponseEntity<String> handleResourceNotFound(BadRequest ex){
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<String> handleUnauthorizedException(UnauthorizedException ex) {
-        return ResponseEntity.status(401).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
-    @ExceptionHandler(CategoryAlreadyExist.class)
-    public ResponseEntity<String> handleCategoryAlreadyExist(CategoryAlreadyExist ex) {
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<String> handleInsufficientStockException(BusinessException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
-    @ExceptionHandler(PaymentFailed.class)
-    public ResponseEntity<String> handlePaymentFailed(PaymentFailed ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        return ResponseEntity.badRequest().body(errorMessage);
     }
 
-    @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<String> handleInsufficientStockException(InsufficientStockException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> generic(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ex.getMessage());
     }
 
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<String> locked() {
+        return ResponseEntity.status(401)
+                .body("Account is locked due to multiple failed login attempts. Please contact support.");
+    }
+
+    @ExceptionHandler(CredentialsExpiredException.class)
+    public ResponseEntity<String> expired() {
+        return ResponseEntity.status(401)
+                .body("Account Password is expired");
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<String> disabled() {
+        return ResponseEntity.status(401)
+                .body("Account is not activated");
+    }
 }

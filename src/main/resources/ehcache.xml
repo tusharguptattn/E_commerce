@@ -37,10 +37,10 @@
         <key-type>java.lang.Object</key-type>
         <value-type>java.lang.Object</value-type>
         <expiry>
-            <ttl unit="seconds">1800</ttl>  <!-- 30 minutes -->
+            <ttl unit="seconds">7200</ttl>  <!-- 2 hours -->
         </expiry>
         <resources>
-            <heap unit="entries">1000</heap>
+            <heap unit="entries">2000</heap>
         </resources>
     </cache>
 
@@ -49,7 +49,7 @@
         <key-type>java.lang.Object</key-type>
         <value-type>java.lang.Object</value-type>
         <expiry>
-            <ttl unit="seconds">7200</ttl>  <!-- 2 hours -->
+            <ttl unit="seconds">1800</ttl>  <!-- 30 min -->
         </expiry>
         <resources>
             <heap unit="entries">500</heap>
@@ -64,7 +64,7 @@
             <ttl unit="seconds">900</ttl>  <!-- 15 minutes -->
         </expiry>
         <resources>
-            <heap unit="entries">3000</heap>
+            <heap unit="entries">1000</heap>
         </resources>
     </cache>
 
