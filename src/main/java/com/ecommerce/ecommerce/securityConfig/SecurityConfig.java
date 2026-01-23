@@ -27,28 +27,70 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
     }
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http
+        .csrf(csrf -> csrf.disable())
 
-        return http
-                .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
 
-                .authorizeHttpRequests(auth -> auth
+            // ========= PUBLIC APIs =========
+            .requestMatchers(
+                "/api/auth/login",
+                "/api/auth/forgot-password",
+                "/api/auth/reset-password",
+                "/api/register",
 
-                        // ===== PUBLIC =====
-                        .requestMatchers("/api/sellers/**").hasRole("SELLER")
-                        .requestMatchers("/api/customers/**").authenticated()
-                        .anyRequest().permitAll()
-                )
+                "/api/products/view/**",
+                "/api/products/ViewProductByIdCustomer/**",
+                "/api/products/ViewAllProductByIdCustomer/**",
+                "/api/products/ViewAllSimilarProducts/**",
 
-                .sessionManagement(sess ->
-                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                "/api/categories/public/**"
+            ).permitAll()
 
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+            // ========= CUSTOMER APIs =========
+            .requestMatchers(
+                "/api/customers/**",
+                "/api/cart/**",
+                "/api/orders/customer/**",
+                "/api/categories/customer/**"
+            ).hasRole("CUSTOMER")
+
+            // ========= SELLER APIs =========
+            .requestMatchers(
+                "/api/sellers/**",
+                "/api/products/**",
+                "/api/variations/**",
+                "/api/orders/seller/**",
+                "/api/orders/changeOrderStatus/**",
+                "/api/categories/seller/**"
+            ).hasRole("SELLER")
+
+            // ========= ADMIN APIs =========
+            .requestMatchers(
+                "/api/admin/**",
+                "/api/categories/admin/**",
+                "/api/orders/admin/**",
+                "/api/products/activateProduct/**",
+                "/api/products/deactivateProduct/**"
+            ).hasRole("ADMIN")
+
+            // ========= EVERYTHING ELSE =========
+            .anyRequest().authenticated()
+        )
+
+        .sessionManagement(sess ->
+            sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
+        .build();
+  }
+
+
 
 
 

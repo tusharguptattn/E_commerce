@@ -25,14 +25,14 @@ public class CategoryController {
   CategoryService categoryService;
 
 
-  @PostMapping
+  @PostMapping("/admin/addMetaData")
   public ResponseEntity<String> addMetaDataField(
       @RequestParam @NotBlank(message = "Field name cannot be blank") String fieldName) {
     categoryService.addMetaDataField(fieldName);
     return ResponseEntity.ok("Metadata field added successfully");
   }
 
-  @GetMapping("/metadata-fields")
+  @GetMapping("/admin/metadata-fields")
   public Page<CategoryMetadataFieldResponseDto> getAllMetadataFields(
       @RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
@@ -49,20 +49,20 @@ public class CategoryController {
   }
 
 
-  @PostMapping("/addNewCategory")
+  @PostMapping("/admin/addNewCategory")
   public ResponseEntity<String> addCategory(
       @RequestBody @Valid CategoryRequestDto categoryRequestDto) {
     Long categoryId = categoryService.addCategory(categoryRequestDto);
     return ResponseEntity.ok("Category added successfully with ID: " + categoryId);
   }
 
-  @GetMapping("/viewCategory/{id}")
+  @GetMapping("/admin/viewCategory/{id}")
   public ResponseEntity<ViewCategoryResponse> viewCategory(@PathVariable Long id) {
     return ResponseEntity.ok(categoryService.viewCategory(id));
   }
 
 
-  @GetMapping("/viewAllCategories")
+  @GetMapping("/admin/viewAllCategories")
   public Page<ChildCategoryResponseDto> viewAllCategories(
       @RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
@@ -79,7 +79,7 @@ public class CategoryController {
   }
 
 
-  @PutMapping("/updateCategory")
+  @PutMapping("/admin/updateCategory")
   public ResponseEntity<String> updateCategory(
       @RequestBody @Valid CategoryUpdateRequestDto categoryRequestDto) {
     categoryService.updateCategory(categoryRequestDto);
@@ -88,14 +88,14 @@ public class CategoryController {
 
   }
 
-  @PostMapping("/addCategoryMetaDataFieldsValues")
+  @PostMapping("/admin/addCategoryMetaDataFieldsValues")
   public ResponseEntity<String> addCategoryMetaDataFieldsValues(
       @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto) {
     categoryService.addMetaDataFieldValues(categoryMetaDataFieldRequestDto);
     return ResponseEntity.ok("Metadata fields added to category successfully");
   }
 
-  @PutMapping("/updateCategoryMetaDataFieldsValues")
+  @PutMapping("/admin/updateCategoryMetaDataFieldsValues")
   public ResponseEntity<String> updateCategoryMetaDataFieldsValues(
       @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto) {
     categoryService.updateMetaDataFieldValues(categoryMetaDataFieldRequestDto);
@@ -106,19 +106,19 @@ public class CategoryController {
 
 
   // for seller
-  @GetMapping("/viewAllCategoriesLeaf")
+  @GetMapping("/seller/viewAllCategoriesLeaf")
   public ResponseEntity<List<LeafCategoryResponseDto>> viewAllCategories() {
     return ResponseEntity.ok(categoryService.viewAllCategoriesLeaf());
   }
 
   // for Customer
-  @GetMapping("/getAllCategoriesForCustomer")
+  @GetMapping("/customer/getAllCategoriesForCustomer")
   public ResponseEntity<List<CategoryMetadataFieldResponseDto>> getAllCategoriesForCustomer(
       @RequestParam(required = false) Long categoryId) {
     return ResponseEntity.ok(categoryService.getAllCategoriesForCustomer(categoryId));
   }
 
-  @GetMapping("/getCategoryFilters")
+  @GetMapping("/customer/getCategoryFilters")
   public ResponseEntity<CategoryFilterResponseDto> getCategoryFilters(
       @RequestParam Long categoryId) {
     return ResponseEntity.ok(categoryService.getFilteredCategoryData(categoryId));

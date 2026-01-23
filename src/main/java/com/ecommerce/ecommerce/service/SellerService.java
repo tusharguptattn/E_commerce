@@ -4,6 +4,7 @@ import com.ecommerce.ecommerce.dto.CompanyAddressRequestDto;
 import com.ecommerce.ecommerce.dto.ResetPasswordRequestDto;
 import com.ecommerce.ecommerce.dto.SellerProfileUpdateRequestDto;
 import com.ecommerce.ecommerce.dto.SellerViewMyProfileDto;
+import com.ecommerce.ecommerce.dto.UpdatePasswordForSellerDto;
 import com.ecommerce.ecommerce.entity.AddressEntity;
 import com.ecommerce.ecommerce.entity.CompanyAddressEntity;
 import com.ecommerce.ecommerce.entity.SellerEntity;
@@ -73,8 +74,8 @@ public class SellerService {
   }
 
   @Transactional
-  public void updatePassword(ResetPasswordRequestDto resetPasswordRequestDto,Long sellerId,Long userId){
-    SellerEntity sellerEntity = sellerRepo.findByUser_Id(sellerId)
+  public void updatePassword(UpdatePasswordForSellerDto resetPasswordRequestDto,Long userId){
+    SellerEntity sellerEntity = sellerRepo.findByUser_Id(resetPasswordRequestDto.sellerId())
         .orElseThrow(() -> new BadRequest("Seller Not found"));
 
     if (!sellerEntity.getUser().getId().equals(userId)) {
@@ -93,8 +94,8 @@ public class SellerService {
 
 
   @Transactional
-  public void updateAdderess(Long addressId, CompanyAddressRequestDto companyAddressRequestDto,Long userId){
-    CompanyAddressEntity companyAddressEntity = companyAddressRepo.findById(addressId)
+  public void updateAdderess(CompanyAddressRequestDto companyAddressRequestDto,Long userId){
+    CompanyAddressEntity companyAddressEntity = companyAddressRepo.findById(companyAddressRequestDto.addressId())
         .orElseThrow(() -> new BadRequest("Address not found with the given id "));
 
     if (!companyAddressEntity.getSellerEntity().getUser().getId()

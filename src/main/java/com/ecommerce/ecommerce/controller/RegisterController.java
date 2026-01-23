@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequestMapping("/api/users")
+@RequestMapping("/api/register")
 public class RegisterController {
 
   RegisterService registerService;
@@ -58,16 +58,6 @@ public class RegisterController {
 
 }
 
-//
-//
-//
-//    @GetMapping
-//    public ResponseEntity<UserResponseDto> getUserById(){
-//        return ResponseEntity.ok(userService.getUserById(securityUtil.getCurrentUserId()));
-//    }
-//    @PutMapping
-//    public ResponseEntity<UserResponseDto> updateUser(@RequestBody @Valid UserRequestDto userRequestDto){
-//        return ResponseEntity.ok(userService.updateUser(securityUtil.getCurrentUserId(),userRequestDto));
-//    }
+
 
 

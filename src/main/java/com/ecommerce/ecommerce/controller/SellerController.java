@@ -1,8 +1,10 @@
 package com.ecommerce.ecommerce.controller;
 
+import com.ecommerce.ecommerce.dto.CompanyAddressRequestDto;
 import com.ecommerce.ecommerce.dto.ResetPasswordRequestDto;
 import com.ecommerce.ecommerce.dto.SellerProfileUpdateRequestDto;
 import com.ecommerce.ecommerce.dto.SellerViewMyProfileDto;
+import com.ecommerce.ecommerce.dto.UpdatePasswordForSellerDto;
 import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import com.ecommerce.ecommerce.service.SellerService;
 import jakarta.validation.Valid;
@@ -42,9 +44,15 @@ public class SellerController {
   }
 
   @PatchMapping("/updatePassword")
-  public void updatePassword(ResetPasswordRequestDto resetPasswordRequestDto){
+  public ResponseEntity<String> updatePassword(@RequestBody @Valid UpdatePasswordForSellerDto updatePasswordForSellerDto){
+    sellerService.updatePassword(updatePasswordForSellerDto,securityUtil.getCurrentUserId());
+    return ResponseEntity.ok("Password Updated Successfully");
 
+  }
 
+  public ResponseEntity<String> updateAddress(@RequestBody @Valid CompanyAddressRequestDto companyAddressRequestDto) {
+    sellerService.updateAdderess(companyAddressRequestDto,securityUtil.getCurrentUserId());
+    return ResponseEntity.ok("Address Updated Successfully");
   }
 
 

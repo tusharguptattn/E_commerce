@@ -102,7 +102,7 @@ public class OrderController {
 
 
     //Seller
-
+    @GetMapping("/seller/getAllProducts")
     public ResponseEntity<Page<OrderProductDtoForSeller>> getAllSellerProductOrders(  @RequestParam(defaultValue = "10") int max,
         @RequestParam(defaultValue = "0") int offset,
         @RequestParam(defaultValue = "id") String sort,
@@ -128,7 +128,7 @@ public class OrderController {
     }
 
     //Admin
-  @GetMapping("/getAllOrderForAdmin")
+  @GetMapping("/admin/getAllOrderForAdmin")
   public ResponseEntity<Page<OrderEntity>> getAllOrdersForAdmin(@RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
       @RequestParam(defaultValue = "id") String sort,

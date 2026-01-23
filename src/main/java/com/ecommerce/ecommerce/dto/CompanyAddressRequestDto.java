@@ -1,8 +1,11 @@
 package com.ecommerce.ecommerce.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record CompanyAddressRequestDto(
+    @NotNull(message = "Address ID cannot be null")
+    Long addressId,
     @NotBlank(message = "Street cannot be blank")
     String street,
     @NotBlank(message = "City cannot be blank")
