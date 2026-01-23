@@ -1,120 +1,183 @@
 package com.ecommerce.ecommerce.service;
 
-import com.ecommerce.ecommerce.dto.CartItemRequestDto;
-import com.ecommerce.ecommerce.dto.CartItemResponseDto;
-import com.ecommerce.ecommerce.dto.CartResponseDto;
+import com.ecommerce.ecommerce.dto.ProductVariationResponseForCustomerDto;
 import com.ecommerce.ecommerce.entity.CartEntity;
 import com.ecommerce.ecommerce.entity.CartItemEntity;
+import com.ecommerce.ecommerce.entity.CustomerEntity;
 import com.ecommerce.ecommerce.entity.ProductEntity;
-import com.ecommerce.ecommerce.entity.UserEntity;
-import com.ecommerce.ecommerce.exceptionHanding.ResourceNotFoundException;
+import com.ecommerce.ecommerce.entity.ProductVariation;
+import com.ecommerce.ecommerce.exceptionHanding.BadRequest;
 import com.ecommerce.ecommerce.repository.CartItemRepo;
 import com.ecommerce.ecommerce.repository.CartRepo;
+import com.ecommerce.ecommerce.repository.CustomerRepo;
 import com.ecommerce.ecommerce.repository.ProductRepo;
+import com.ecommerce.ecommerce.repository.ProductVariationRepo;
 import com.ecommerce.ecommerce.repository.UserRepo;
+import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
+import java.util.List;
+import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 public class CartService {
 
-    private final CartRepo cartRepo;
-    private final UserRepo userRepo;
-    private final ProductRepo productRepo;
-    private final CartItemRepo cartItemRepo;
+  CartRepo cartRepo;
+  UserRepo userRepo;
+  ProductRepo productRepo;
+  SecurityUtil securityUtil;
+  CustomerRepo customerRepo;
+  ProductVariationRepo productVariationRepo;
+  CartItemRepo cartItemRepo;
 
-    public CartService(UserRepo userRepo, ProductRepo productRepo,
-                       CartRepo cartRepo, CartItemRepo cartItemRepo) {
-        this.userRepo = userRepo;
-        this.productRepo = productRepo;
-        this.cartRepo = cartRepo;
-        this.cartItemRepo = cartItemRepo;
-    }
-    @Transactional
-    public CartResponseDto addProductToCart(CartItemRequestDto dto,Long userId) {
-        UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+  @Transactional
+  public void addProductToCart(Long productVariationId, int quantity) {
 
-        CartEntity cart = user.getCart();
-        ProductEntity product = productRepo.findById(dto.productId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+    ProductVariation productVariation = productVariationRepo.findById(productVariationId)
+        .orElseThrow(() -> new BadRequest("Product Variation not found"));
 
-        if (dto.quantity() <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than 0");
-        }
-
-
-        // check if product already exists in cart
-        CartItemEntity existing = cartItemRepo.findByCartIdAndProductId(cart.getCartId(), product.getProductId());
-        if (existing != null) {
-            existing.setQuantity(existing.getQuantity() + dto.quantity());
-            cartItemRepo.save(existing);
-        } else {
-            CartItemEntity item = new CartItemEntity();
-            item.setCart(cart);
-            item.setProduct(product);
-            item.setQuantity(dto.quantity());
-            cartItemRepo.save(item);
-        }
-
-        return buildCartResponse(cart);
-    }
-    @Transactional
-    public CartResponseDto updateQuantity(Long cartItemId, int quantity,Long userId)  {
-
-        CartItemEntity item = cartItemRepo.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
-        if(!item.getCart().getUser().getId().equals(userId)){
-            throw new ResourceNotFoundException("Cart item not found for this user");
-        }
-        item.setQuantity(quantity);
-        cartItemRepo.save(item);
-
-        return buildCartResponse(item.getCart());
-    }
-    @Transactional
-    public CartResponseDto removeItem(Long cartItemId,Long userId)  {
-        CartItemEntity item = cartItemRepo.findById(cartItemId).orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
-        if (!item.getCart().getUser().getId().equals(userId)) {
-            throw new ResourceNotFoundException("Cart item not found for user");
-        }
-
-        CartEntity cart = item.getCart();
-        cartItemRepo.delete(item);
-
-        return buildCartResponse(cart);
+    if (!productVariation.isActive() || productVariation.getQuantityAvailable() <= 0) {
+      throw new BadRequest("Product is out of stock");
     }
 
-    public CartResponseDto getCartByUser(Long userId) {
-        UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    Long userId = securityUtil.getCurrentUserId();
 
-        return buildCartResponse(user.getCart());
+    CustomerEntity customerEntity = customerRepo.findByUserId(userId)
+        .orElseThrow(() -> new BadRequest("Not able to find a valid customer"));
+
+    CartEntity cart = cartRepo.findByCustomer_User_Id(userId);
+
+    if (cart == null) {
+      cart = new CartEntity();
+      cart.setCustomer(customerEntity);
+      cartRepo.save(cart);
     }
-    @Transactional
-    public Boolean clearCart(Long userId) {
-        CartEntity cart = cartRepo.findByUser_Id(userId);
-        if (cart == null) return false;
-        cart.getCartItems().clear();
-        return true;
+
+    Optional<CartItemEntity> existingItem = cartItemRepo.findByCart_IdAndProductVariation_Id(
+        cart.getId(),
+        productVariationId);
+
+    if (existingItem.isPresent()) {
+      CartItemEntity cartItem = existingItem.get();
+      int newQuantity = cartItem.getQuantity() + quantity;
+
+      if (newQuantity > productVariation.getQuantityAvailable()) {
+        throw new BadRequest("Requested quantity exceeds available stock");
+      }
+
+      cartItem.setQuantity(newQuantity);
+      cartItemRepo.save(cartItem);
+    } else {
+      if (quantity > productVariation.getQuantityAvailable()) {
+        throw new BadRequest("Requested quantity exceeds available stock");
+      }
+      CartItemEntity cartItem = new CartItemEntity();
+      cartItem.setProductVariation(productVariation);
+      cartItem.setQuantity(quantity);
+      cartItem.setCart(cart);
+      cartItem.setInWishlist(false);
+
+      cartItemRepo.save(cartItem);
     }
 
-    private CartResponseDto buildCartResponse(CartEntity cart) {
-        List<CartItemResponseDto> items = cart.getCartItems().stream()
-                .map(ci -> new CartItemResponseDto(
-                        ci.getCartItemId(),
-                        ci.getProduct().getProductId(),
-                        ci.getProduct().getProductName(),
-                        ci.getProduct().getPrice(),
-                        ci.getQuantity()
-                )).toList();
+  }
 
-        double total = items.stream().mapToDouble(i -> i.price() * i.quantity()).sum();
 
-        return new CartResponseDto(cart.getCartId(), items, total);
+  public List<ProductVariationResponseForCustomerDto> getCartByUser() {
+
+    CartEntity byCustomerUserId = cartRepo.findByCustomer_User_Id(securityUtil.getCurrentUserId());
+
+    if (byCustomerUserId == null) {
+      return List.of();
     }
+
+    List<CartItemEntity> items = byCustomerUserId.getItems();
+
+    return items.stream().map(cartItem -> {
+
+      ProductVariation pv = cartItem.getProductVariation();
+
+      boolean outOfStock = !pv.isActive() || pv.getQuantityAvailable() < cartItem.getQuantity();
+
+      return new ProductVariationResponseForCustomerDto(pv.getId(), cartItem.getQuantity(),
+          pv.getPrice(), pv.getMetadata(), pv.getPrimaryImageName(), pv.isActive(), outOfStock);
+
+    }).toList();
+
+  }
+
+
+  @Transactional
+  public void removeItem(Long productVariationId) {
+    CartEntity byCustomerUserId = cartRepo.findByCustomer_User_Id(securityUtil.getCurrentUserId());
+
+    if (byCustomerUserId == null) {
+      throw new BadRequest("Cart not found");
+    }
+    CartItemEntity item = cartItemRepo.findByCart_IdAndProductVariation_Id(byCustomerUserId.getId(),
+        productVariationId).orElseThrow(() -> new BadRequest("Cart item not found"));
+
+    cartItemRepo.delete(item);
+  }
+
+
+  @Transactional
+  public void updateQuantity(Long productVariationId, int quantity) {
+
+    ProductVariation productVariation = productVariationRepo.findById(productVariationId)
+        .orElseThrow(() -> new BadRequest("Not product found with this id"));
+
+    ProductEntity productEntity = productRepo.findById(productVariation.getProduct().getProductId())
+        .orElseThrow(() -> new BadRequest("Product not found with variation id"));
+
+    if (!productVariation.isActive() || productEntity.isDeleted()) {
+      throw new BadRequest("Product is deactivated or deleted");
+    }
+
+    CartEntity byCustomerUserId = cartRepo.findByCustomer_User_Id(securityUtil.getCurrentUserId());
+
+    if (byCustomerUserId == null) {
+      throw new BadRequest("Cart not available");
+    }
+
+    CartItemEntity cartItem1 = byCustomerUserId.getItems().stream()
+        .filter(cartItem -> cartItem.getProductVariation().getId().equals(productVariationId))
+        .findFirst().orElseThrow(() -> new BadRequest("Product not exist in car"));
+
+    if (quantity == 0) {
+      cartItemRepo.delete(cartItem1);
+      return;
+    }
+
+    int newQuantity = cartItem1.getQuantity() + quantity;
+
+    if (newQuantity > productVariation.getQuantityAvailable()) {
+      throw new BadRequest("Required quantity is not available");
+    }
+
+    cartItem1.setQuantity(newQuantity);
+
+    cartItemRepo.save(cartItem1);
+
+  }
+
+  @Transactional
+  public void clearCart() {
+    CartEntity cart = cartRepo.findByCustomer_User_Id(securityUtil.getCurrentUserId());
+
+    if (cart == null) {
+      throw new BadRequest("Cart not found");
+    }
+
+
+    cartRepo.delete(cart);
+
+  }
 }
 
 

@@ -37,45 +37,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // ===== PUBLIC =====
-                        .requestMatchers(
-                                "/api/users/register",
-                                "/api/users/login"
-                        ).permitAll()
-
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/category/**").permitAll()
-
-                        // ===== ADMIN ONLY =====
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasRole("ADMIN")
-
-                        // ===== SELLER + ADMIN =====
-                        .requestMatchers(HttpMethod.POST, "/api/products/**")
-                        .hasAnyRole("SELLER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**")
-                        .hasAnyRole("SELLER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**")
-                        .hasAnyRole("SELLER", "ADMIN")
-
-                        // ===== AUTHENTICATED USERS (USER / SELLER / ADMIN) =====
-                        .requestMatchers(
-                                "/api/addresses/**",
-                                "/api/cart/**",
-                                "/api/orders/**",
-                                "/api/payments/**",
-                                "/api/sellers/**",
-                                "/api/users/**"
-                        ).authenticated()
-
-                        .anyRequest().denyAll()
+                        .requestMatchers("/api/sellers/**").hasRole("SELLER")
+                        .requestMatchers("/api/customers/**").authenticated()
+                        .anyRequest().permitAll()
                 )
 
                 .sessionManagement(sess ->

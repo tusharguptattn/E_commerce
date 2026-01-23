@@ -1,15 +1,18 @@
 package com.ecommerce.ecommerce.entity;
 
-import com.ecommerce.ecommerce.enums.OrderStatus;
+import com.ecommerce.ecommerce.entity.embeddable.CreateAndUpdatedBy;
+import com.ecommerce.ecommerce.entity.embeddable.OrderAddress;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -20,36 +23,39 @@ import java.util.List;
 public class OrderEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "order_seq")
+    @SequenceGenerator(name = "order_seq",sequenceName = "order_seq_gen",initialValue = 100,allocationSize = 10)
+    @Column(name = "ID")
     private Long orderId;
 
-    @Column(nullable = false)
-    private double totalAmount;
+    @ManyToOne
+    @JoinColumn(name = "CUSTOMER_USER_ID",nullable = false)
+    private CustomerEntity customer;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status=OrderStatus.PENDING;// PENDING, SHIPPED, DELIVERED
+    @Column(name="AMOUNT_PAID",nullable = false)
+    private BigDecimal amountPaid;
+
 
     @CreationTimestamp
-    @Column(updatable = false,nullable = false)
+    @Column(updatable = false,nullable = false,name = "DATE_CREATED")
     private Date createdAt;
+
+    @Column(name = "PAYMENT_METHOD",nullable = false)
+    private String paymentMethod;
+
+    @Embedded
+    private OrderAddress address;
+
 
     @Version
     private Long version;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItemEntity> orderItems;
+  @Embedded
+  private CreateAndUpdatedBy createAndUpdatedBy;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
-    private PaymentEntity payment;
-
-
-    @Embedded
-    private OrderAddressKey addressKey;
 
 
 

@@ -1,29 +1,48 @@
 package com.ecommerce.ecommerce.entity;
 
-import com.ecommerce.ecommerce.enums.SellerStatus;
+import com.ecommerce.ecommerce.entity.embeddable.CreateAndUpdatedBy;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "sellerRegion")
 public class SellerEntity {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "seller_seq")
+    @SequenceGenerator(name = "seller_seq",sequenceName = "seller_seq_gen",initialValue = 100,allocationSize = 10)
+    @Column(name = "ID")
     private Long sellerId;
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "USER_ID")
     private UserEntity user;
 
-    @Enumerated(EnumType.STRING)
-    private SellerStatus status=SellerStatus.PENDING; // PENDING, APPROVED
 
+    @Column(name = "COMPANY_NAME",nullable = false, unique = true)
     private String businessName;
+
+    @Column(name = "GST", unique = true)
     private String gstNumber;
-    private String bankAccountNumber;
-    private String ifscCode;
+
+    @Column(name = "COMPANY_CONTACT", nullable = false, unique = true)
+    private String companyContactNumber;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+  @Embedded
+  private CreateAndUpdatedBy createAndUpdatedBy;
+
 
 
 }

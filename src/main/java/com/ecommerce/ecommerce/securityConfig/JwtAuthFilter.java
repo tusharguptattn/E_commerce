@@ -1,6 +1,6 @@
 package com.ecommerce.ecommerce.securityConfig;
 
-import com.ecommerce.ecommerce.repository.BlacklistedTokenRepo;
+//import com.ecommerce.ecommerce.repository.BlacklistedTokenRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,12 +17,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
-    private final BlacklistedTokenRepo blacklistedTokenRepo;
+//    private final BlacklistedTokenRepo blacklistedTokenRepo;
 
-    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService, BlacklistedTokenRepo blacklistedTokenRepo) {
+    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
-        this.blacklistedTokenRepo = blacklistedTokenRepo;
+//        this.blacklistedTokenRepo = blacklistedTokenRepo;
     }
 
     @Override
@@ -39,10 +39,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        if (blacklistedTokenRepo.existsByToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+//        if (blacklistedTokenRepo.existsByToken(token)) {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            return;
+//        }
 
         String username = jwtService.extractUsername(token);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

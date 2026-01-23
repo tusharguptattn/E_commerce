@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce.securityConfig;
 
+import com.ecommerce.ecommerce.entity.RoleEntity;
 import com.ecommerce.ecommerce.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -7,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -18,9 +20,10 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_"+user.getRole().authority()));
+        return user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority( role.getAuthority()))
+                .toList();
     }
-
     public Long getUserId() {
         return user.getId();
     }
@@ -39,11 +42,11 @@ public class CustomUserDetails implements UserDetails {
     public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { return !user.isLocked(); }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() { return !user.isExpired(); }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() { return user.isActive(); }
 }
