@@ -47,7 +47,10 @@ public class SecurityConfig {
                 "/api/products/ViewAllProductByIdCustomer/**",
                 "/api/products/ViewAllSimilarProducts/**",
 
-                "/api/categories/public/**"
+                "/api/categories/public/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**"
             ).permitAll()
 
             // ========= CUSTOMER APIs =========
