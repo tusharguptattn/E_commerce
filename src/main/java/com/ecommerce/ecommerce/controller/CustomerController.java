@@ -7,9 +7,11 @@ import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import com.ecommerce.ecommerce.service.CustomerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class CustomerController {
 
   CustomerService customerService;
   SecurityUtil securityUtil;
+  MessageSource messageSource;
 
   @GetMapping("/viewMyProfile")
   public ResponseEntity<CustomerViewMyProfileDto> viewMyProfile() {
@@ -40,10 +43,10 @@ public class CustomerController {
 
   @PatchMapping("/updateProfile")
   public ResponseEntity<String> updateProfile(
-      @RequestBody @Valid CustomerUpdateRequestDto customerUpdateRequestDto) {
+      @RequestBody @Valid CustomerUpdateRequestDto customerUpdateRequestDto, Locale locale) {
     // Implementation for viewing customer address goes here
     customerService.updateProfile(customerUpdateRequestDto, securityUtil.getCurrentUserId());
-    return ResponseEntity.ok("Profile updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("profile.updated", null, locale));
 
   }
 
@@ -53,32 +56,32 @@ public class CustomerController {
           message = "Password must be 8-15 chars with upper, lower, digit & special char"
       )
       @RequestParam String newPassword,
-      @RequestParam String confirmPassword) {
+      @RequestParam String confirmPassword,Locale locale) {
     customerService.updatePassword(newPassword, confirmPassword, securityUtil.getCurrentUserId());
-    return ResponseEntity.ok("Password updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("password.updated", null, locale));
 
   }
 
 
   @PostMapping("/addNewAddress")
-  public ResponseEntity<String> addNewAddress(@RequestBody @Valid AddressDto addressDto) {
+  public ResponseEntity<String> addNewAddress(@RequestBody @Valid AddressDto addressDto,Locale locale) {
     customerService.addNewAddress(addressDto, securityUtil.getCurrentUserId());
-    return ResponseEntity.ok("Address added successfully");
+    return ResponseEntity.ok(messageSource.getMessage("address.added", null, locale));
 
   }
 
   @DeleteMapping("/deleteAddress")
-  public ResponseEntity<String> deleteAddress(@RequestParam Long addressId) {
+  public ResponseEntity<String> deleteAddress(@RequestParam Long addressId,Locale locale) {
     customerService.deleteAddress(addressId, securityUtil.getCurrentUserId());
-    return ResponseEntity.ok("Address deleted successfully");
+    return ResponseEntity.ok(messageSource.getMessage("address.deleted", null, locale));
 
   }
 
   @PutMapping("/updateAddress")
   public ResponseEntity<String> updateAddress(@RequestBody @Valid AddressDto addressDto,
-      @RequestParam Long addressId) {
+      @RequestParam Long addressId,Locale locale) {
     customerService.updateAddress(addressId, securityUtil.getCurrentUserId(), addressDto);
-    return ResponseEntity.ok("Address updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("address.updated", null, locale));
 
   }
 

@@ -1,6 +1,10 @@
 package com.ecommerce.ecommerce.service;
 
+import com.ecommerce.ecommerce.dto.OrderSummaryDto;
+import com.ecommerce.ecommerce.dto.UserResponseDto;
 import com.ecommerce.ecommerce.entity.ProductEntity;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -158,6 +162,47 @@ public class EmailService {
             "Regards,\n" + "Support Team"
     );
   }
+
+  @Async
+  public void sendPendingOrderMail(String sellerEmail,
+      List<OrderSummaryDto> orders) {
+
+    String body = orders.stream()
+        .map(o -> """
+                        Order ID: %d
+                        Product: %s
+                        Status: %s
+                        """.formatted(o.orderId(), o.productName(), o.status()))
+        .collect(Collectors.joining("\n\n"));
+
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(sellerEmail);
+    message.setSubject("Pending Orders Reminder");
+    message.setText(body);
+
+    mailSender.send(message);
+  }
+
+  @Async
+  public void sendProductActivationMail(ProductEntity product,String adminEmail) {
+
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(adminEmail);
+    message.setSubject("New Product Pending Activation");
+    message.setText(
+        "A new product has been added and requires activation.\n\n" +
+            "Product Details:\n" +
+            "Name: " + product.getProductName() + "\n" +
+            "Price: " + product.getBrand() + "\n" +
+            "Product ID: " + product.getSeller()
+    );
+
+    mailSender.send(message);
+  }
+
+
+
+
 
 
 }

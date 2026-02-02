@@ -4,6 +4,7 @@ package com.ecommerce.ecommerce.service;
 import com.ecommerce.ecommerce.dto.OrderProductDtoForSeller;
 import com.ecommerce.ecommerce.dto.OrderProductDtoResponse;
 import com.ecommerce.ecommerce.dto.OrderResponseDto;
+import com.ecommerce.ecommerce.dto.OrderSummaryDto;
 import com.ecommerce.ecommerce.entity.*;
 import com.ecommerce.ecommerce.entity.embeddable.OrderAddress;
 import com.ecommerce.ecommerce.enums.OrderStatus;
@@ -12,6 +13,7 @@ import com.ecommerce.ecommerce.repository.*;
 import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -448,6 +450,17 @@ public class OrderService {
 
   public Page<OrderEntity> getAllOrdersForAdmin(Pageable pageable){
     return orderRepo.findAll(pageable);
+  }
+
+
+  public List<OrderSummaryDto> getListOfOrdersForSeller(){
+    List<OrderStatus> finalStatuses = List.of(
+        OrderStatus.ORDER_CONFIRMED,
+        OrderStatus.ORDER_REJECTED,
+        OrderStatus.CANCELLED,
+        OrderStatus.CLOSED
+    );
+    return orderRepo.findPendingOrdersForSeller(finalStatuses);
   }
 
 

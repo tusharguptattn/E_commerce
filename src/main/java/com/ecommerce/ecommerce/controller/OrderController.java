@@ -9,9 +9,11 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,14 +29,15 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
   OrderService service;
+  MessageSource messageSource;
 
   // Customer
 
   @PostMapping("/addAllToOrder/{addressId}")
   public ResponseEntity<String> addAllProductFromCartToOrder(
-      @PathVariable @NotNull(message = "address id can not be null") Long addressId) {
+      @PathVariable @NotNull(message = "address id can not be null") Long addressId, Locale locale) {
     service.addAllCartToOrder(addressId);
-    return ResponseEntity.ok("All cart products added to Order");
+    return ResponseEntity.ok(messageSource.getMessage("order.added", null, locale));
   }
 
   // Customer
@@ -42,10 +45,10 @@ public class OrderController {
   public ResponseEntity<String> addPartialProductFromCartToOrder(
       @RequestParam @NotNull(message = "Atleast one id is required")
       List<Long> cartItemIds,
-      @PathVariable @NotNull(message = "address id can not be null") Long addressId) {
+      @PathVariable @NotNull(message = "address id can not be null") Long addressId,Locale locale) {
 
     service.addPartialCartToOrder(cartItemIds, addressId);
-    return ResponseEntity.ok("Selected product added to cart");
+    return ResponseEntity.ok(messageSource.getMessage("order.added", null, locale));
   }
 
 
@@ -54,26 +57,26 @@ public class OrderController {
   public ResponseEntity<String> addOrderDirectlyFromProductVariation(
       @PathVariable @NotNull(message = "product variation id can not be null") Long productVariationId,
       @PathVariable @Min(value = 1, message = "Minimum quatity should be 1") int quantity,
-      @PathVariable @NotNull(message = "address id can not be null") Long addressId) {
+      @PathVariable @NotNull(message = "address id can not be null") Long addressId,Locale locale) {
     service.directlyOrderFromProductVariation(productVariationId, quantity, addressId);
-    return ResponseEntity.ok("Order has been placed");
+    return ResponseEntity.ok(messageSource.getMessage("order.placed", null, locale));
   }
 
   // Customer
   @PutMapping("/cancelOrder/{orderProductId}")
   public ResponseEntity<String> cancelOrder(
-      @PathVariable @NotNull(message = "order product id can not be null") Long orderProductId) {
+      @PathVariable @NotNull(message = "order product id can not be null") Long orderProductId,Locale locale) {
     service.cancelOrder(orderProductId);
-    return ResponseEntity.ok("Order Cancelled");
+    return ResponseEntity.ok(messageSource.getMessage("order.cancelled", null, locale));
   }
 
   // Customer
 
   @PutMapping("/returnOrder/{orderProductId}")
   public ResponseEntity<String> returnOrder(
-      @PathVariable @NotNull(message = "order product id can not be null") Long orderProductId) {
+      @PathVariable @NotNull(message = "order product id can not be null") Long orderProductId,Locale locale) {
     service.returnOrder(orderProductId);
-    return ResponseEntity.ok("Order is initiated for return");
+    return ResponseEntity.ok(messageSource.getMessage("order.returned", null, locale));
   }
 
   // Customer
@@ -121,9 +124,9 @@ public class OrderController {
     //Seller
     // Admin
     @PutMapping("/changeOrderStatus/{orderProductId}")
-    public ResponseEntity<String> changeOrderStatus(@PathVariable @NotNull(message = "order product id can not be null") Long orderProductId,@RequestParam @NotBlank(message = "from status can not be null") String fromStatus,@RequestParam @NotBlank(message = "to status can not be blank") String toStatus){
+    public ResponseEntity<String> changeOrderStatus(@PathVariable @NotNull(message = "order product id can not be null") Long orderProductId,@RequestParam @NotBlank(message = "from status can not be null") String fromStatus,@RequestParam @NotBlank(message = "to status can not be blank") String toStatus,Locale locale) {
       service.changeOrderStatus(orderProductId,fromStatus,toStatus);
-      return ResponseEntity.ok("Status Updated");
+      return ResponseEntity.ok(messageSource.getMessage("order.status-change", null, locale));
 
     }
 

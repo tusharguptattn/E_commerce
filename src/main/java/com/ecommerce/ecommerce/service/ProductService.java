@@ -11,6 +11,7 @@ import com.ecommerce.ecommerce.dto.ProductVariationResponseDto;
 import com.ecommerce.ecommerce.dto.ProductVariationResponseForCustomerDto;
 import com.ecommerce.ecommerce.dto.ProductVariationResponseWithoutProductDetailsDto;
 import com.ecommerce.ecommerce.dto.ProductVariationUpdateRequest;
+import com.ecommerce.ecommerce.dto.UserResponseDto;
 import com.ecommerce.ecommerce.entity.CategoryEntity;
 import com.ecommerce.ecommerce.entity.CategoryMetaDataField;
 import com.ecommerce.ecommerce.entity.CategoryMetaDataFieldValues;
@@ -25,6 +26,7 @@ import com.ecommerce.ecommerce.repository.CategoryRepo;
 import com.ecommerce.ecommerce.repository.ProductRepo;
 import com.ecommerce.ecommerce.repository.ProductVariationRepo;
 import com.ecommerce.ecommerce.repository.SellerRepo;
+import com.ecommerce.ecommerce.repository.UserRepo;
 import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,6 +68,7 @@ public class ProductService {
   ProductVariationRepo productVariationRepo;
   CategoryService categoryService;
   EmailService emailService;
+  UserRepo userRepo;
 
 
   @Transactional
@@ -94,7 +97,15 @@ public class ProductService {
     product.setReturnable(productRequestDto.isReturnable());
     product.setSeller(seller);
 
-    productRepo.save(product);
+    ProductEntity savedProduct = productRepo.save(product);
+
+    Page<UserResponseDto> admin = userRepo.findByRoles_Authority("ADMIN", Pageable.unpaged());
+
+    for (String s : admin.stream().map(u -> u.email()).toList()) {
+      emailService.sendProductActivationMail(savedProduct,s);
+    }
+
+
 
   }
 

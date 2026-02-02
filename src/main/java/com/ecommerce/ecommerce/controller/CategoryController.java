@@ -4,9 +4,11 @@ import com.ecommerce.ecommerce.dto.*;
 import com.ecommerce.ecommerce.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +25,14 @@ import java.util.List;
 public class CategoryController {
 
   CategoryService categoryService;
+  MessageSource messageSource;
 
 
   @PostMapping("/admin/addMetaData")
   public ResponseEntity<String> addMetaDataField(
-      @RequestParam @NotBlank(message = "Field name cannot be blank") String fieldName) {
+      @RequestParam @NotBlank(message = "Field name cannot be blank") String fieldName, Locale locale) {
     categoryService.addMetaDataField(fieldName);
-    return ResponseEntity.ok("Metadata field added successfully");
+    return ResponseEntity.ok(messageSource.getMessage("metadata.field.added", null, locale));
   }
 
   @GetMapping("/admin/metadata-fields")
@@ -51,9 +54,10 @@ public class CategoryController {
 
   @PostMapping("/admin/addNewCategory")
   public ResponseEntity<String> addCategory(
-      @RequestBody @Valid CategoryRequestDto categoryRequestDto) {
+      @RequestBody @Valid CategoryRequestDto categoryRequestDto,Locale locale) {
     Long categoryId = categoryService.addCategory(categoryRequestDto);
-    return ResponseEntity.ok("Category added successfully with ID: " + categoryId);
+
+    return ResponseEntity.ok(messageSource.getMessage("category.added", null, locale)+ categoryId);
   }
 
   @GetMapping("/admin/viewCategory/{id}")
@@ -72,37 +76,35 @@ public class CategoryController {
   ) {
     Sort.Direction direction =
         order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-
     Pageable pageable = PageRequest.of(offset, max, Sort.by(direction, sort));
-
     return categoryService.viewAllCategories(query, pageable);
   }
 
 
   @PutMapping("/admin/updateCategory")
   public ResponseEntity<String> updateCategory(
-      @RequestBody @Valid CategoryUpdateRequestDto categoryRequestDto) {
+      @RequestBody @Valid CategoryUpdateRequestDto categoryRequestDto,Locale locale) {
     categoryService.updateCategory(categoryRequestDto);
-    return ResponseEntity.ok("Category updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("category.updated", null, locale));
 
 
   }
 
   @PostMapping("/admin/addCategoryMetaDataFieldsValues")
   public ResponseEntity<String> addCategoryMetaDataFieldsValues(
-      @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto) {
+      @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto,Locale locale) {
     categoryService.addMetaDataFieldValues(categoryMetaDataFieldRequestDto);
-    return ResponseEntity.ok("Metadata fields added to category successfully");
+    return ResponseEntity.ok(messageSource.getMessage("metadata.fieldValue.added", null, locale));
   }
 
   @PutMapping("/admin/updateCategoryMetaDataFieldsValues")
   public ResponseEntity<String> updateCategoryMetaDataFieldsValues(
-      @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto) {
+      @RequestBody @Valid CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldRequestDto,Locale locale) {
     categoryService.updateMetaDataFieldValues(categoryMetaDataFieldRequestDto);
-    return ResponseEntity.ok("Metadata fields values updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("metadata.fieldValue.updated", null, locale));
   }
 
-  // al; above for admin
+  // all above for admin
 
 
   // for seller
