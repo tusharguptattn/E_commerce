@@ -5,9 +5,11 @@ import com.ecommerce.ecommerce.dto.*;
 import com.ecommerce.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,22 +28,23 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
   ProductService productService;
+  MessageSource messageSource;
 
   // Seller
 
   @PostMapping("/addProduct")
   public ResponseEntity<String> addProduct(
-      @RequestBody @Valid ProductRequestDto productRequestDto) {
+      @RequestBody @Valid ProductRequestDto productRequestDto, Locale locale) {
     productService.addProduct(productRequestDto);
-    return ResponseEntity.ok("Product added successfully");
+    return ResponseEntity.ok(messageSource.getMessage("product.add",null,locale));
   }
 
   // Seller
   @PostMapping(value = "/addProductVariants", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> getProductById(
-      @ModelAttribute @Valid ProductVariationRequestDto productVariationRequestDto) {
+      @ModelAttribute @Valid ProductVariationRequestDto productVariationRequestDto, Locale locale) {
     productService.addProductVariation(productVariationRequestDto);
-    return ResponseEntity.ok("Product Variation added successfully");
+    return ResponseEntity.ok(messageSource.getMessage("product.variation.add",null,locale));
   }
 
   // Seller
@@ -91,19 +94,20 @@ public class ProductController {
   // Seller
   @DeleteMapping("/delete/{productId}")
   public ResponseEntity<String> deleteProduct(
-      @PathVariable @NotNull(message = "product id can not be null") Long productId) {
+      @PathVariable @NotNull(message = "product id can not be null") Long productId,Locale locale) {
 
     productService.deleteProduct(productId);
-    return ResponseEntity.ok("Product deleted successfully");
+    return ResponseEntity.ok(messageSource.getMessage("product.deleted",null,locale));
   }
 
   // Seller
   @PutMapping("/update")
   public ResponseEntity<String> updateProduct(
-      @RequestBody @Valid ProductUpdateRequestDto productUpdateRequestDto) {
+      @RequestBody @Valid ProductUpdateRequestDto productUpdateRequestDto,Locale locale) {
 
     productService.updateProduct(productUpdateRequestDto);
-    return ResponseEntity.ok("Product Updated Successfully");
+
+    return ResponseEntity.ok(messageSource.getMessage("product.update",null,locale));
   }
   // Seller
   @PutMapping("/updateProductVariation")
@@ -177,18 +181,18 @@ public class ProductController {
   // admin
 
   @PutMapping("/deactivateProduct/{productId}")
-  public ResponseEntity<String> deactivateProduct(@PathVariable @NotNull(message = "product id can not be null") Long productId){
+  public ResponseEntity<String> deactivateProduct(@PathVariable @NotNull(message = "product id can not be null") Long productId,Locale locale) {
     productService.deactivateProductByAdmin(productId);
-    return ResponseEntity.ok("Product Deactivated");
+    return ResponseEntity.ok(messageSource.getMessage("product.deactivated",null,locale));
   }
 
 
   // admin
 
   @PutMapping("/activateProduct/{productId}")
-  public ResponseEntity<String> activateProduct(@PathVariable @NotNull(message = "product id can not be null") Long productId){
+  public ResponseEntity<String> activateProduct(@PathVariable @NotNull(message = "product id can not be null") Long productId,Locale locale) {
     productService.activateProductByAdmin(productId);
-    return ResponseEntity.ok("Product Activated");
+    return ResponseEntity.ok(messageSource.getMessage("product.activated",null,locale));
   }
 
 

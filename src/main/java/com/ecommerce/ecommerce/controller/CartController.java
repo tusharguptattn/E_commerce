@@ -7,9 +7,11 @@ import com.ecommerce.ecommerce.service.CartService;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +25,16 @@ public class CartController {
 
 
   CartService service;
-  SecurityUtil securityUtil;
-
+  MessageSource messageSource;
 
   @PostMapping("/addProductToCart")
   public ResponseEntity<String> addProductToCart(
       @RequestParam @NotNull(message = "Product variation id can not be null") Long productVariationId,
-      @RequestParam @Min(value = 1, message = "quantity can not be less than 1") int quantity) {
+      @RequestParam @Min(value = 1, message = "quantity can not be less than 1") int quantity,
+      Locale locale) {
     service.addProductToCart(productVariationId, quantity);
-    return ResponseEntity.ok("Product Successfully added to cart");
+    messageSource.getMessage("cart.added", null, locale);
+    return ResponseEntity.ok(messageSource.getMessage("cart.added", null, locale));
   }
 
 
@@ -43,25 +46,27 @@ public class CartController {
 
   @DeleteMapping("/remove/{cartItemId}")
   public ResponseEntity<String> removeItem(
-      @PathVariable @NotNull(message = "product variation id can not be null") Long productVariationId) {
+      @PathVariable @NotNull(message = "product variation id can not be null") Long productVariationId,
+      Locale locale) {
     service.removeItem(productVariationId);
-    return ResponseEntity.ok("Item removed from cart successfully");
+    messageSource.getMessage("cart.added", null, locale);
+    return ResponseEntity.ok(messageSource.getMessage("remove.cart.item", null, locale));
   }
 
 
   @PutMapping("/update/{cartItemId}")
   public ResponseEntity<String> updateQuantity(
       @RequestParam @NotNull(message = "product variation id can not be null") Long productVariationId,
-      @RequestParam @Min(0) int quantity) {
+      @RequestParam @Min(0) int quantity, Locale locale) {
     service.updateQuantity(productVariationId, quantity);
-    return ResponseEntity.ok("Cart item quantity updated successfully");
+    return ResponseEntity.ok(messageSource.getMessage("update.cart.item", null, locale));
   }
 
 
   @DeleteMapping("/clear")
-  public ResponseEntity<String> clearCart() {
+  public ResponseEntity<String> clearCart(Locale locale) {
     service.clearCart();
-    return ResponseEntity.ok("Cart cleared successfully");
+    return ResponseEntity.ok(messageSource.getMessage("cart.clear", null, locale));
   }
 
 }
