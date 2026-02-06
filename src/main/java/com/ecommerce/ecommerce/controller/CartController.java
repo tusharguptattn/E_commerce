@@ -44,7 +44,7 @@ public class CartController {
   }
 
 
-  @DeleteMapping("/remove/{cartItemId}")
+  @DeleteMapping("/remove/{productVariationId}")
   public ResponseEntity<String> removeItem(
       @PathVariable @NotNull(message = "product variation id can not be null") Long productVariationId,
       Locale locale) {
@@ -54,7 +54,7 @@ public class CartController {
   }
 
 
-  @PutMapping("/update/{cartItemId}")
+  @PutMapping("/update/{productVariationId}")
   public ResponseEntity<String> updateQuantity(
       @RequestParam @NotNull(message = "product variation id can not be null") Long productVariationId,
       @RequestParam @Min(0) int quantity, Locale locale) {

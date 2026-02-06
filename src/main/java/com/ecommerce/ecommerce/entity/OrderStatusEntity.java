@@ -26,7 +26,7 @@ public class OrderStatusEntity {
     @Column(name = "ID")
     private Long id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ORDER_PRODUCT_ID", nullable = false)
     private OrderProduct orderProduct;
 
@@ -52,7 +52,7 @@ public class OrderStatusEntity {
     private LocalDateTime updatedAt;
 
   @Embedded
-  private CreateAndUpdatedBy createAndUpdatedBy;
+  private CreateAndUpdatedBy createAndUpdatedBy = new CreateAndUpdatedBy();
 
 
 

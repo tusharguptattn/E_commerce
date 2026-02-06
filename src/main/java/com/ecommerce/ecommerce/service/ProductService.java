@@ -333,42 +333,67 @@ public class ProductService {
     if (productVariation.getProduct().isDeleted() || !productVariation.getProduct().isActive()) {
       throw new BadRequest("Product is already deleted or in active");
     }
+    Map<String, Object> metadata = null;
+    if (productVariationUpdateRequest.metedata() != null
+        && !productVariationUpdateRequest.metedata().isBlank()) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      try {
+        metadata = objectMapper.readValue(productVariationUpdateRequest.metedata(),
+            new TypeReference<Map<String, Object>>() {});
+      } catch (Exception e) {
+        throw new BadRequest("Invalid metadata JSON");
+      }
+    }
+
     Long categopryId = productVariation.getProduct().getCategory().getCategoryId();
-    for (Map.Entry<String, Object> m : productVariationUpdateRequest.metedata().entrySet()) {
+    if (metadata != null) {
+      for (Map.Entry<String, Object> m : metadata.entrySet()) {
 
-      CategoryMetaDataField byName = categoryMetaDataFieldRepo.findByName(m.getKey());
+        CategoryMetaDataField byName = categoryMetaDataFieldRepo.findByName(m.getKey());
 
-      if (byName == null) {
-        throw new BadRequest("no meta data found with " + m.getKey());
+        if (byName == null) {
+          throw new BadRequest("no meta data found with " + m.getKey());
+        }
+
+        CategoryMetaDataFieldValues categoryMetaDataFieldValues = categoryMetaDataFieldValueRepo.findByCategoryEntity_CategoryIdAndCategoryMetaDataField_Id(
+                categopryId, byName.getId())
+            .orElseThrow(() -> new BadRequest("Not Value associated with " + m.getKey()));
+
+        Set<String> allowedValues = Arrays.stream(categoryMetaDataFieldValues.getValues().split(","))
+            .map(String::trim)
+            .map(String::toLowerCase)
+            .collect(Collectors.toSet());
+
+        String incomingValue = m.getValue().toString().trim().toLowerCase();
+
+        if (!allowedValues.contains(incomingValue)) {
+          throw new BadRequest("given metadata value is not present");
+        }
+
+
       }
-
-      CategoryMetaDataFieldValues categoryMetaDataFieldValues = categoryMetaDataFieldValueRepo.findByCategoryEntity_CategoryIdAndCategoryMetaDataField_Id(
-              categopryId, byName.getId())
-          .orElseThrow(() -> new BadRequest("Not Value associated with " + m.getKey()));
-
-      Set<String> allowedValues = Arrays.stream(categoryMetaDataFieldValues.getValues().split(","))
-          .map(String::trim)
-          .map(String::toLowerCase)
-          .collect(Collectors.toSet());
-
-      String incomingValue = m.getValue().toString().trim().toLowerCase();
-
-      if (!allowedValues.contains(incomingValue)) {
-        throw new BadRequest("given metadata value is not present");
-      }
-
-
     }
 
     // -------- Optional updates --------
-    productVariation.setQuantityAvailable(productVariationUpdateRequest.quantity());
-    productVariation.setPrice(productVariationUpdateRequest.price());
+    if (productVariationUpdateRequest.quantity() != null) {
+      productVariation.setQuantityAvailable(productVariationUpdateRequest.quantity());
+    }
+    if (productVariationUpdateRequest.price() != null) {
+      productVariation.setPrice(productVariationUpdateRequest.price());
+    }
 
-    productVariation.setActive(productVariationUpdateRequest.isActive());
+    if (productVariationUpdateRequest.isActive() != null) {
+      productVariation.setActive(productVariationUpdateRequest.isActive());
+    }
 
-    productVariation.setMetadata(productVariationUpdateRequest.metedata());
-    productVariation.setPrimaryImageName(
-        productVariationUpdateRequest.primaryImage().getOriginalFilename());
+    if (metadata != null) {
+      productVariation.setMetadata(metadata);
+    }
+    if (productVariationUpdateRequest.primaryImage() != null
+        && !productVariationUpdateRequest.primaryImage().isEmpty()) {
+      productVariation.setPrimaryImageName(
+          productVariationUpdateRequest.primaryImage().getOriginalFilename());
+    }
 
     productVariationRepo.save(productVariation);
 
@@ -488,4 +513,3 @@ public class ProductService {
 
 
 }
-

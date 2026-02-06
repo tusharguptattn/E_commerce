@@ -149,8 +149,10 @@ public class CartService {
         .filter(cartItem -> cartItem.getProductVariation().getId().equals(productVariationId))
         .findFirst().orElseThrow(() -> new BadRequest("Product not exist in car"));
 
+
     if (quantity == 0) {
-      cartItemRepo.delete(cartItem1);
+      byCustomerUserId.getItems().remove(cartItem1);
+      cartRepo.save(byCustomerUserId);
       return;
     }
 

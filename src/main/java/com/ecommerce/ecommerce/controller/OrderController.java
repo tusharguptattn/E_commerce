@@ -91,10 +91,13 @@ public class OrderController {
   public ResponseEntity<Page<OrderResponseDto>> getAllOrders(
       @RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
-      @RequestParam(defaultValue = "id") String sort,
+      @RequestParam(defaultValue = "orderId") String sort,
       @RequestParam(defaultValue = "asc") String order,
       @RequestParam(required = false) String query) {
 
+    if ("id".equalsIgnoreCase(sort)) {
+      sort = "orderId";
+    }
     Sort.Direction direction = order.equalsIgnoreCase("asc") ? Direction.ASC : Direction.DESC;
 
     Sort sorting = Sort.by(direction, sort);
@@ -108,10 +111,13 @@ public class OrderController {
     @GetMapping("/seller/getAllProducts")
     public ResponseEntity<Page<OrderProductDtoForSeller>> getAllSellerProductOrders(  @RequestParam(defaultValue = "10") int max,
         @RequestParam(defaultValue = "0") int offset,
-        @RequestParam(defaultValue = "id") String sort,
+        @RequestParam(defaultValue = "itemId") String sort,
         @RequestParam(defaultValue = "asc") String order,
         @RequestParam(required = false) String query){
 
+      if ("id".equalsIgnoreCase(sort)) {
+        sort = "itemId";
+      }
       Sort.Direction direction = order.equalsIgnoreCase("asc") ? Direction.ASC : Direction.DESC;
 
       Sort sorting = Sort.by(direction, sort);
@@ -134,10 +140,13 @@ public class OrderController {
   @GetMapping("/admin/getAllOrderForAdmin")
   public ResponseEntity<Page<OrderEntity>> getAllOrdersForAdmin(@RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
-      @RequestParam(defaultValue = "id") String sort,
+      @RequestParam(defaultValue = "orderId") String sort,
       @RequestParam(defaultValue = "asc") String order,
       @RequestParam(required = false) String query){
 
+    if ("id".equalsIgnoreCase(sort)) {
+      sort = "orderId";
+    }
     Sort.Direction direction = order.equalsIgnoreCase("asc") ? Direction.ASC : Direction.DESC;
 
     Sort sorting = Sort.by(direction, sort);
@@ -161,4 +170,3 @@ public class OrderController {
 
 
 }
-
