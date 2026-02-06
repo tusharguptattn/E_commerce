@@ -110,9 +110,9 @@ public class ProductController {
     return ResponseEntity.ok(messageSource.getMessage("product.update",null,locale));
   }
   // Seller
-  @PutMapping("/updateProductVariation")
+  @PutMapping(value = "/updateProductVariation",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public void updateProductVariation(
-      @RequestBody @Valid ProductVariationUpdateRequest productVariationUpdateRequest) {
+      @ModelAttribute @Valid ProductVariationUpdateRequest productVariationUpdateRequest) {
 
     productService.updateProductVariationData(productVariationUpdateRequest);
 
@@ -157,7 +157,7 @@ public class ProductController {
 
   // customer
 
-  @GetMapping("ViewAllSimilarProducts/{categoryId}")
+  @GetMapping("ViewAllSimilarProducts/{productId}")
   public ResponseEntity<Page<ProductResponseForCustomer>> getAllSimilarProducts( @PathVariable @NotNull(message = "Category id can not be null") Long productId,
       @RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,

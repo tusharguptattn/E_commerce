@@ -51,7 +51,7 @@ public class EmailService {
 
   @Async
   public void sendActivationEmail(String toEmail, String token, String firstName) {
-    String activationLink = "http://localhost:8080/api/users/activate?token=" + token;
+    String activationLink = "http://localhost:8080/api/register/activate?token=" + token;
     SimpleMailMessage message = new SimpleMailMessage();
     message.setTo(toEmail);
     message.setSubject("Activate Your Account");

@@ -50,20 +50,16 @@ public class OrderService {
   public void addAllCartToOrder(Long addressID) {
     Long userId = securityUtil.getCurrentUserId();
     CartEntity cart = cartRepo.findByCustomer_User_Id(userId);
-
+    List<CartItemEntity> cartItems = cart.getItems();
     if (cart == null) {
       throw new BadRequest("Cart is null");
     }
+    if(cartItems.isEmpty()){
+      throw new BadRequest("Cart is empty");
+    }
+
     CustomerEntity customerEntity = customerRepo.findByUserId(userId)
         .orElseThrow(() -> new BadRequest("No customer found with this id"));
-
-    BigDecimal totalAmount = BigDecimal.ZERO;
-
-    List<OrderProduct> orderItems = new ArrayList<>();
-
-    OrderEntity orderEntity = new OrderEntity();
-    orderEntity.setCustomer(customerEntity);
-    orderEntity.setPaymentMethod("Online");
 
     AddressEntity addressEntity = addressRepo.findAllAddressesByUserId(userId).stream()
         .filter(a -> a.getAddressId().equals(addressID)).findFirst()
@@ -77,11 +73,17 @@ public class OrderService {
     orderAddress.setState(addressEntity.getState());
     orderAddress.setAddressLine(addressEntity.getStreet());
 
+    BigDecimal totalAmount = BigDecimal.ZERO;
+    List<OrderProduct> orderItems = new ArrayList<>();
+
+    OrderEntity orderEntity = new OrderEntity();
+    orderEntity.setCustomer(customerEntity);
+    orderEntity.setPaymentMethod("Online");
     orderEntity.setAddress(orderAddress);
+    orderEntity.setAmountPaid(BigDecimal.ZERO);
+    orderRepo.save(orderEntity);
 
-    List<OrderStatusEntity> orderStatusList = new ArrayList<>();
-
-    for (CartItemEntity cartItem : cart.getItems()) {
+    for (CartItemEntity cartItem : cartItems) {
 
       ProductVariation variation = cartItem.getProductVariation();
 
@@ -106,7 +108,6 @@ public class OrderService {
       orderItem.setPrice(variation.getPrice());
 
       orderItems.add(orderItem);
-      orderProductRepo.save(orderItem);
 
       // reduce stock
       variation.setQuantityAvailable(
@@ -114,17 +115,22 @@ public class OrderService {
       );
 
       productVariationRepo.save(variation);
-      OrderStatusEntity orderStatusEntity = new OrderStatusEntity();
-      orderStatusEntity.setFromStatus(null);
-      orderStatusEntity.setOrderProduct(orderItem);
-      orderStatusEntity.setToStatus(OrderStatus.ORDER_CONFIRMED);
-      orderStatusEntity.setTransitionNotesComments("Order Placed By Customer");
-      orderStatusEntity.setTimestamp(LocalDateTime.now());
-      orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
     }
     orderEntity.setAmountPaid(totalAmount);
 
     orderProductRepo.saveAll(orderItems);
+    List<OrderStatusEntity> statusEntities = new ArrayList<>();
+    for (OrderProduct orderItem : orderItems) {
+      OrderStatusEntity orderStatusEntity = new OrderStatusEntity();
+      orderStatusEntity.setFromStatus(null);
+      orderStatusEntity.setOrderProduct(orderItem);
+      orderStatusEntity.setToStatus(OrderStatus.ORDER_PLACED);
+      orderStatusEntity.setTransitionNotesComments("Order Placed By Customer");
+      orderStatusEntity.setTimestamp(LocalDateTime.now());
+      orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
+      statusEntities.add(orderStatusEntity);
+    }
+    orderStatusRepo.saveAll(statusEntities);
 
     orderRepo.save(orderEntity);
     cartItemRepo.deleteAll(cart.getItems());
@@ -427,24 +433,29 @@ public class OrderService {
     OrderStatusEntity orderStatusEntity1 = orderStatusRepo.findTopByOrderProduct_ItemIdOrderByTimestampDesc(
         orderProductId).orElseThrow(() -> new BadRequest("No Data found for this order"));
 
-    OrderStatus fromStatus1 = OrderStatus.valueOf(fromStatus);
+    if (fromStatus == null || toStatus == null) {
+      throw new BadRequest("fromStatus and toStatus are required");
+    }
+
+    OrderStatus fromStatus1 = OrderStatus.valueOf(fromStatus.trim().toUpperCase());
 
     if(orderStatusEntity1.getToStatus()!=fromStatus1){
       throw new BadRequest("Current status is not matching with your status");
     }
 
-    OrderStatus toStatus1 = OrderStatus.valueOf(toStatus);
+    OrderStatus toStatus1 = OrderStatus.valueOf(toStatus.trim().toUpperCase());
 
-    if(fromStatus1.canTransitionTo(toStatus1)){
-      OrderStatusEntity orderStatusEntity = new OrderStatusEntity();
-      orderStatusEntity.setToStatus(toStatus1);
-      orderStatusEntity.setOrderProduct(orderProduct);
-      orderStatusEntity.setFromStatus(fromStatus1);
-      orderStatusEntity.setTransitionNotesComments("Transition Chnages from "+fromStatus +"to "+toStatus);
-      orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
-      orderStatusRepo.save(orderStatusEntity);
-
+    if (!fromStatus1.canTransitionTo(toStatus1)) {
+      throw new BadRequest("Invalid status transition from " + fromStatus1 + " to " + toStatus1);
     }
+
+    OrderStatusEntity orderStatusEntity = new OrderStatusEntity();
+    orderStatusEntity.setToStatus(toStatus1);
+    orderStatusEntity.setOrderProduct(orderProduct);
+    orderStatusEntity.setFromStatus(fromStatus1);
+    orderStatusEntity.setTransitionNotesComments("Transition Chnages from "+fromStatus +"to "+toStatus);
+    orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
+    orderStatusRepo.save(orderStatusEntity);
 
   }
 
@@ -466,4 +477,3 @@ public class OrderService {
 
 
 }
-

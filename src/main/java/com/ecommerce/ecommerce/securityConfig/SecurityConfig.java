@@ -40,7 +40,7 @@ public class SecurityConfig {
                 "/api/auth/login",
                 "/api/auth/forgot-password",
                 "/api/auth/reset-password",
-                "/api/register",
+                "/api/register/**",
 
                 "/api/products/view/**",
                 "/api/products/ViewProductByIdCustomer/**",
@@ -61,6 +61,15 @@ public class SecurityConfig {
                 "/api/categories/customer/**"
             ).hasRole("CUSTOMER")
 
+            // ========= ADMIN APIs =========
+            .requestMatchers(
+                "/api/admin/**",
+                "/api/categories/admin/**",
+                "/api/orders/admin/**",
+                "/api/products/activateProduct/**",
+                "/api/products/deactivateProduct/**"
+            ).hasRole("ADMIN")
+
             // ========= SELLER APIs =========
             .requestMatchers(
                 "/api/sellers/**",
@@ -71,14 +80,8 @@ public class SecurityConfig {
                 "/api/categories/seller/**"
             ).hasRole("SELLER")
 
-            // ========= ADMIN APIs =========
-            .requestMatchers(
-                "/api/admin/**",
-                "/api/categories/admin/**",
-                "/api/orders/admin/**",
-                "/api/products/activateProduct/**",
-                "/api/products/deactivateProduct/**"
-            ).hasRole("ADMIN")
+
+
 
             // ========= EVERYTHING ELSE =========
             .anyRequest().authenticated()

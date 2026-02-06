@@ -1,14 +1,13 @@
 package com.ecommerce.ecommerce.controller;
 
+import com.ecommerce.ecommerce.dto.CompanyAddressCreateRequestDto;
 import com.ecommerce.ecommerce.dto.CompanyAddressRequestDto;
-import com.ecommerce.ecommerce.dto.ResetPasswordRequestDto;
 import com.ecommerce.ecommerce.dto.SellerProfileUpdateRequestDto;
 import com.ecommerce.ecommerce.dto.SellerViewMyProfileDto;
 import com.ecommerce.ecommerce.dto.UpdatePasswordForSellerDto;
 import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import com.ecommerce.ecommerce.service.SellerService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -54,6 +53,14 @@ public class SellerController {
 
   }
 
+  @PostMapping("/company-address")
+  public ResponseEntity<String> addAddress(@RequestBody @Valid CompanyAddressCreateRequestDto companyAddressRequestDto,
+      Locale locale) {
+    sellerService.addAddress(companyAddressRequestDto, securityUtil.getCurrentUserId());
+    return ResponseEntity.ok(messageSource.getMessage("address.added", null, locale));
+  }
+
+  @PutMapping("/updateAddress")
   public ResponseEntity<String> updateAddress(@RequestBody @Valid CompanyAddressRequestDto companyAddressRequestDto,Locale locale) {
     sellerService.updateAdderess(companyAddressRequestDto,securityUtil.getCurrentUserId());
     return ResponseEntity.ok(messageSource.getMessage("address.updated",null,locale));

@@ -1,17 +1,15 @@
 package com.ecommerce.ecommerce.service;
 
+import com.ecommerce.ecommerce.dto.CompanyAddressCreateRequestDto;
 import com.ecommerce.ecommerce.dto.CompanyAddressRequestDto;
-import com.ecommerce.ecommerce.dto.ResetPasswordRequestDto;
 import com.ecommerce.ecommerce.dto.SellerProfileUpdateRequestDto;
 import com.ecommerce.ecommerce.dto.SellerViewMyProfileDto;
 import com.ecommerce.ecommerce.dto.UpdatePasswordForSellerDto;
-import com.ecommerce.ecommerce.entity.AddressEntity;
 import com.ecommerce.ecommerce.entity.CompanyAddressEntity;
 import com.ecommerce.ecommerce.entity.SellerEntity;
 import com.ecommerce.ecommerce.entity.UserEntity;
 import com.ecommerce.ecommerce.exceptionHanding.BadRequest;
 import com.ecommerce.ecommerce.exceptionHanding.UnauthorizedException;
-import com.ecommerce.ecommerce.repository.AddressRepo;
 import com.ecommerce.ecommerce.repository.CompanyAddressRepo;
 import com.ecommerce.ecommerce.repository.SellerRepo;
 import com.ecommerce.ecommerce.repository.UserRepo;
@@ -40,16 +38,46 @@ public class SellerService {
     SellerEntity sellerEntity = sellerRepo.findByUser_Id(userId)
         .orElseThrow(() -> new BadRequest("Seller profile not found"));
 
-    CompanyAddressEntity companyAddressEntity = companyAddressRepo.findBySellerEntity_SellerId(sellerEntity.getSellerId());
+    CompanyAddressEntity companyAddressEntity = companyAddressRepo.findBySellerEntity_SellerId(
+        sellerEntity.getSellerId());
+
+    String city = companyAddressEntity != null ? companyAddressEntity.getCity() : null;
+    String state = companyAddressEntity != null ? companyAddressEntity.getState() : null;
+    String country = companyAddressEntity != null ? companyAddressEntity.getCountry() : null;
+    String zipcode = companyAddressEntity != null ? companyAddressEntity.getZipcode() : null;
+    String street = companyAddressEntity != null ? companyAddressEntity.getStreet() : null;
 
     return new SellerViewMyProfileDto(userEntity.getId(), userEntity.getFirstName(),
         userEntity.getLastName(),
         userEntity.isActive(), sellerEntity.getCompanyContactNumber(),
         sellerEntity.getBusinessName(), null, sellerEntity.getGstNumber(),
-        companyAddressEntity.getCity(), companyAddressEntity.getState(), companyAddressEntity.getCountry(),
-        companyAddressEntity.getZipcode(), companyAddressEntity.getStreet()
+        city, state, country,
+        zipcode, street
     );
 
+  }
+
+  @Transactional
+  public void addAddress(CompanyAddressCreateRequestDto companyAddressRequestDto, Long userId) {
+    SellerEntity sellerEntity = sellerRepo.findByUser_Id(userId)
+        .orElseThrow(() -> new BadRequest("Seller profile not found"));
+
+    CompanyAddressEntity existingAddress =
+        companyAddressRepo.findBySellerEntity_SellerId(sellerEntity.getSellerId());
+
+    if (existingAddress != null) {
+      throw new BadRequest("Company address already exists");
+    }
+
+    CompanyAddressEntity companyAddressEntity = new CompanyAddressEntity();
+    companyAddressEntity.setStreet(companyAddressRequestDto.street());
+    companyAddressEntity.setCity(companyAddressRequestDto.city());
+    companyAddressEntity.setState(companyAddressRequestDto.state());
+    companyAddressEntity.setZipcode(companyAddressRequestDto.zipcode());
+    companyAddressEntity.setCountry(companyAddressRequestDto.country());
+    companyAddressEntity.setSellerEntity(sellerEntity);
+
+    companyAddressRepo.save(companyAddressEntity);
   }
 
   @Transactional

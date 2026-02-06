@@ -38,9 +38,19 @@ public record SellerRequestDto(
                 ,message = "GSTIN number is invalid")
         String gstinNumber,
 
+        @NotBlank(message = "Company name is required")
         String companyName,
 
-        String companyAddress
+        @NotBlank(message = "Street cannot be blank")
+        String street,
+        @NotBlank(message = "City cannot be blank")
+        String city,
+        @NotBlank(message = "State cannot be blank")
+        String state,
+        @NotBlank(message = "Zipcode cannot be blank")
+        String zipcode,
+        @NotBlank(message = "Country cannot be blank")
+        String country
 
 
 ) {

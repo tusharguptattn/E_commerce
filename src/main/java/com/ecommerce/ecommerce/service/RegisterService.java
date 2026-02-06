@@ -35,6 +35,7 @@ public class RegisterService {
   EmailService emailService;
   TokenGeneration tokenGeneration;
   SellerRepo sellerRepo;
+  CompanyAddressRepo companyAddressRepo;
 
 
   @Transactional
@@ -143,7 +144,16 @@ public class RegisterService {
     sellerEntity.setBusinessName(sellerRequestDto.companyName());
     sellerEntity.setCompanyContactNumber(sellerRequestDto.companyContactNumber());
     sellerEntity.setUser(userEntity);
-    sellerRepo.save(sellerEntity);
+    SellerEntity savedSeller = sellerRepo.save(sellerEntity);
+
+    CompanyAddressEntity addressEntity = new CompanyAddressEntity();
+    addressEntity.setStreet(sellerRequestDto.street());
+    addressEntity.setCity(sellerRequestDto.city());
+    addressEntity.setState(sellerRequestDto.state());
+    addressEntity.setZipcode(sellerRequestDto.zipcode());
+    addressEntity.setCountry(sellerRequestDto.country());
+    addressEntity.setSellerEntity(savedSeller);
+    companyAddressRepo.save(addressEntity);
 
     emailService.sendWaitForApprovalEmail(sellerRequestDto.email());
 

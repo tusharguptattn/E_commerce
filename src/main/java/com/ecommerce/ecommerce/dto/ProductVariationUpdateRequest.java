@@ -1,19 +1,17 @@
 package com.ecommerce.ecommerce.dto;
 
 import jakarta.validation.constraints.NotNull;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
 
 public record ProductVariationUpdateRequest(
         @NotNull(message = "variation id can not be null")
         Long productVariationid,
-        int quantity,
+        Integer quantity,
         BigDecimal price,
-        Map<String,Object> metedata,
+        String metedata,
         MultipartFile primaryImage,
         List<MultipartFile> secondaryImages,
-        boolean isActive) {
+        Boolean isActive) {
 }

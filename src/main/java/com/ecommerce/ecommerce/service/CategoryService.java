@@ -151,7 +151,7 @@ public class CategoryService {
     CategoryEntity category = categoryRepo.findById(categoryRequestDto.id())
         .orElseThrow(() -> new BadRequest("Category not found"));
 
-    if (category.getParentCategory().getCategoryId() == null) {
+    if (category.getParentCategory() == null) {
       if (categoryRepo.existsByNameAndParentCategoryIsNull(categoryRequestDto.name())) {
         throw new BadRequest("Category name already exists at root level");
       }
