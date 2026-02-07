@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce.controller;
 
 
+import com.ecommerce.ecommerce.dto.AdminOrderResponse;
 import com.ecommerce.ecommerce.dto.OrderProductDtoForSeller;
 import com.ecommerce.ecommerce.dto.OrderResponseDto;
 import com.ecommerce.ecommerce.entity.OrderEntity;
@@ -138,7 +139,7 @@ public class OrderController {
 
     //Admin
   @GetMapping("/admin/getAllOrderForAdmin")
-  public ResponseEntity<Page<OrderEntity>> getAllOrdersForAdmin(@RequestParam(defaultValue = "10") int max,
+  public ResponseEntity<Page<AdminOrderResponse>> getAllOrdersForAdmin(@RequestParam(defaultValue = "10") int max,
       @RequestParam(defaultValue = "0") int offset,
       @RequestParam(defaultValue = "orderId") String sort,
       @RequestParam(defaultValue = "asc") String order,

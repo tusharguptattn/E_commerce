@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce.service;
 
 
+import com.ecommerce.ecommerce.dto.AdminOrderResponse;
 import com.ecommerce.ecommerce.dto.OrderProductDtoForSeller;
 import com.ecommerce.ecommerce.dto.OrderProductDtoResponse;
 import com.ecommerce.ecommerce.dto.OrderResponseDto;
@@ -150,12 +151,32 @@ public class OrderService {
     }
 
     List<CartItemEntity> cartItems = cartItemRepo.findAllById(cartItemIds);
+    if(cartItems.isEmpty()){
+      throw new BadRequest("No cart items found for the provided ids");
+    }
     BigDecimal totalAmount = BigDecimal.ZERO;
 
     CustomerEntity customerEntity = customerRepo.findByUserId(userId)
         .orElseThrow(() -> new BadRequest("No customer found with this id"));
 
+    AddressEntity addressEntity = addressRepo.findAllAddressesByUserId(userId).stream()
+        .filter(a -> a.getAddressId().equals(addressId)).findFirst()
+        .orElseThrow(() -> new BadRequest("Address not found"));
+
+    OrderAddress orderAddress = new OrderAddress();
+    orderAddress.setCity(addressEntity.getCity());
+    orderAddress.setCountry(addressEntity.getCountry());
+    orderAddress.setLabel(addressEntity.getLabel());
+    orderAddress.setZipCode(addressEntity.getZipcode());
+    orderAddress.setState(addressEntity.getState());
+    orderAddress.setAddressLine(addressEntity.getStreet());
+
     OrderEntity orderEntity = new OrderEntity();
+    orderEntity.setCustomer(customerEntity);
+    orderEntity.setPaymentMethod("Online");
+    orderEntity.setAddress(orderAddress);
+    orderEntity.setAmountPaid(BigDecimal.ZERO);
+    orderRepo.save(orderEntity);
 
     List<OrderProduct> orderItems = new ArrayList<>();
 
@@ -194,33 +215,22 @@ public class OrderService {
           variation.getQuantityAvailable() - cartItem.getQuantity()
       );
       productVariationRepo.save(variation);
+    }
+    orderProductRepo.saveAll(orderItems);
 
+    List<OrderStatusEntity> statusEntities = new ArrayList<>();
+    for (OrderProduct orderItem : orderItems) {
       OrderStatusEntity orderStatusEntity = new OrderStatusEntity();
       orderStatusEntity.setFromStatus(null);
       orderStatusEntity.setOrderProduct(orderItem);
       orderStatusEntity.setToStatus(OrderStatus.ORDER_PLACED);
       orderStatusEntity.setTransitionNotesComments("Order Placed By Customer");
       orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
+      statusEntities.add(orderStatusEntity);
     }
-    orderProductRepo.saveAll(orderItems);
-
-    AddressEntity addressEntity = addressRepo.findAllAddressesByUserId(userId).stream()
-        .filter(a -> a.getAddressId().equals(addressId)).findFirst()
-        .orElseThrow(() -> new BadRequest("Address not found"));
-
-    OrderAddress orderAddress = new OrderAddress();
-    orderAddress.setCity(addressEntity.getCity());
-    orderAddress.setCountry(addressEntity.getCountry());
-    orderAddress.setLabel(addressEntity.getLabel());
-    orderAddress.setZipCode(addressEntity.getZipcode());
-    orderAddress.setState(addressEntity.getState());
-    orderAddress.setAddressLine(addressEntity.getStreet());
+    orderStatusRepo.saveAll(statusEntities);
 
     orderEntity.setAmountPaid(totalAmount);
-    orderEntity.setCustomer(customerEntity);
-    orderEntity.setPaymentMethod("Online");
-    orderEntity.setAddress(orderAddress);
-
     orderRepo.save(orderEntity);
     cartItemRepo.deleteAll(cartItems);
 
@@ -235,7 +245,7 @@ public class OrderService {
         .orElseThrow(() -> new BadRequest("Product not found"));
 
     if (quantity > productVariation.getQuantityAvailable()) {
-      throw new BadRequest("Quantity is not avialable");
+      throw new BadRequest("Quantity is not available");
     }
 
     if (!productVariation.isActive() || productVariation.getProduct().isDeleted()) {
@@ -285,6 +295,7 @@ public class OrderService {
     orderStatusEntity.setToStatus(OrderStatus.ORDER_PLACED);
     orderStatusEntity.setTransitionNotesComments("Order Placed By Customer");
     orderStatusEntity.getCreateAndUpdatedBy().setCreatedBy(String.valueOf(userId));
+    orderStatusRepo.save(orderStatusEntity);
 
   }
 
@@ -423,12 +434,26 @@ public class OrderService {
   @Transactional
   public void changeOrderStatus(Long orderProductId,String fromStatus,String toStatus){
     Long userId = securityUtil.getCurrentUserId();
+
+
+
     OrderProduct orderProduct = orderProductRepo.findById(orderProductId)
         .orElseThrow(() -> new BadRequest("No Order found with this id"));
+
 
     if(!orderProduct.getProduct().getProduct().getSeller().getUser().getId().equals(userId)){
       throw new UnauthorizedException("Order does not belongs to you");
     }
+
+    boolean isReturnable = orderProduct
+        .getProduct()
+        .getProduct()
+        .isReturnable();
+
+    if (OrderStatus.RETURN_REQUESTED.equals(toStatus) && !isReturnable) {
+      throw new BadRequest("Order is not returnable");
+    }
+
 
     OrderStatusEntity orderStatusEntity1 = orderStatusRepo.findTopByOrderProduct_ItemIdOrderByTimestampDesc(
         orderProductId).orElseThrow(() -> new BadRequest("No Data found for this order"));
@@ -459,8 +484,9 @@ public class OrderService {
 
   }
 
-  public Page<OrderEntity> getAllOrdersForAdmin(Pageable pageable){
-    return orderRepo.findAll(pageable);
+  public Page<AdminOrderResponse> getAllOrdersForAdmin(Pageable pageable){
+
+    return orderRepo.findAll(pageable).map(o-> new AdminOrderResponse(o.getOrderId(),o.getCustomer().getUser().getEmail(),o.getCustomer().getUser().getFirstName(),o.getAmountPaid()));
   }
 
 
