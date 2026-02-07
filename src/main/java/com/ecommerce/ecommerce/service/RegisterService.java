@@ -43,7 +43,7 @@ public class RegisterService {
     // Registration logic goes here
 
     if (!userRequestDto.password().equals(userRequestDto.confirmPassword())) {
-      throw new ValidationException("Passwords do not match");
+      throw new BadRequest("Passwords do not match");
     }
 
     if (userRepo.existsByEmail(userRequestDto.email())) {
@@ -143,6 +143,7 @@ public class RegisterService {
     SellerEntity sellerEntity = new SellerEntity();
     sellerEntity.setBusinessName(sellerRequestDto.companyName());
     sellerEntity.setCompanyContactNumber(sellerRequestDto.companyContactNumber());
+    sellerEntity.setGstNumber(sellerRequestDto.gstinNumber());
     sellerEntity.setUser(userEntity);
     SellerEntity savedSeller = sellerRepo.save(sellerEntity);
 

@@ -39,7 +39,7 @@ public class SellerController {
     return ResponseEntity.ok(sellerService.getProfile(securityUtil.getCurrentUserId()));
   }
 
-  @PatchMapping("/updateProfile")
+  @PutMapping("/updateProfile")
   public ResponseEntity<String> updateProfile(@RequestBody @Valid SellerProfileUpdateRequestDto sellerProfileUpdateRequestDto,
       Locale locale) {
     sellerService.updateProfile(sellerProfileUpdateRequestDto,securityUtil.getCurrentUserId());

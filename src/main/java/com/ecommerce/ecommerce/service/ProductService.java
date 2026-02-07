@@ -322,7 +322,7 @@ public class ProductService {
       ProductVariationUpdateRequest productVariationUpdateRequest) {
 
     ProductVariation productVariation = productVariationRepo.findById(
-            productVariationUpdateRequest.productVariationid())
+            productVariationUpdateRequest.productVariationId())
         .orElseThrow(() -> new BadRequest("No Product Variation found with this id"));
 
     if (!productVariation.getProduct().getSeller().getUser().getId()
@@ -334,11 +334,11 @@ public class ProductService {
       throw new BadRequest("Product is already deleted or in active");
     }
     Map<String, Object> metadata = null;
-    if (productVariationUpdateRequest.metedata() != null
-        && !productVariationUpdateRequest.metedata().isBlank()) {
+    if (productVariationUpdateRequest.metadata() != null
+        && !productVariationUpdateRequest.metadata().isBlank()) {
       ObjectMapper objectMapper = new ObjectMapper();
       try {
-        metadata = objectMapper.readValue(productVariationUpdateRequest.metedata(),
+        metadata = objectMapper.readValue(productVariationUpdateRequest.metadata(),
             new TypeReference<Map<String, Object>>() {});
       } catch (Exception e) {
         throw new BadRequest("Invalid metadata JSON");

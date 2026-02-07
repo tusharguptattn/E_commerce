@@ -62,18 +62,20 @@ public class CartService {
         cart.getId(),
         productVariationId);
 
+    int productQuantityAvailable = productVariation.getQuantityAvailable();
+
     if (existingItem.isPresent()) {
       CartItemEntity cartItem = existingItem.get();
       int newQuantity = cartItem.getQuantity() + quantity;
 
-      if (newQuantity > productVariation.getQuantityAvailable()) {
+      if (newQuantity > productQuantityAvailable) {
         throw new BadRequest("Requested quantity exceeds available stock");
       }
 
       cartItem.setQuantity(newQuantity);
       cartItemRepo.save(cartItem);
     } else {
-      if (quantity > productVariation.getQuantityAvailable()) {
+      if (quantity > productQuantityAvailable) {
         throw new BadRequest("Requested quantity exceeds available stock");
       }
       CartItemEntity cartItem = new CartItemEntity();
