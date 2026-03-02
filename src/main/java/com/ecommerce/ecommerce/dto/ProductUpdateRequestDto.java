@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public record ProductUpdateRequestDto(
         @NotNull(message = "Product Id can not bt null")
-        Long ProductId,
+        Long productId,
         @NotBlank(message = "Product name cannot be blank")
         @Size(max=50, message = "Product name cannot exceed 50 characters")
         String name,

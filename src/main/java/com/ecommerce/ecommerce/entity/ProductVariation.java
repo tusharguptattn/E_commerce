@@ -18,7 +18,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Table(name = "PRODUCT_VARIATION")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "productRegion")
 public class ProductVariation {
     @Column(name = "ID")
     @Id

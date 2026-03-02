@@ -20,7 +20,6 @@ import org.hibernate.annotations.CreationTimestamp;
 @Entity
 @Getter
 @Setter
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "cartRegion")
 @Table(name = "cart_items",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"CART_ID", "PRODUCT_VARIATION_ID"})

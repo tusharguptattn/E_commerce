@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @NoArgsConstructor
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "categoryRegion")
 @Table(name = "CATEGORY_METADATA_FIELD")
 public class CategoryMetaDataField {
     @Id

@@ -18,7 +18,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @Table(name = "ROLE")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "userRegion")
 public class RoleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "role_seq")

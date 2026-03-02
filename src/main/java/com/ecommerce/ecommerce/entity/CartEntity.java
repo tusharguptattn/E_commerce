@@ -14,7 +14,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "carts")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "cartRegion")
 @NoArgsConstructor
 @Getter
 @Setter

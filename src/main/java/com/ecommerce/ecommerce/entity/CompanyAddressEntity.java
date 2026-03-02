@@ -25,7 +25,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Setter
 @NoArgsConstructor
 @Table(name = "company_address")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "addressRegion")
 public class CompanyAddressEntity {
 
   @Id
