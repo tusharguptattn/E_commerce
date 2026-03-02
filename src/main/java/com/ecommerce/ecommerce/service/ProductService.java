@@ -202,7 +202,7 @@ public class ProductService {
 
   @Cacheable(
       value = "sellerProducts",
-      key = "#id + '-' + T(com.ecommerce.ecommerce.securityConfig.SecurityUtil).getCurrentUserId()"
+      key = "#id + '-' + @securityUtil.getCurrentUserId()"
   )
 
   public ProductResponseDto getProductById(Long id) {

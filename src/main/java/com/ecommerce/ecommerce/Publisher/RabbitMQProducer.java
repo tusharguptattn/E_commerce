@@ -20,7 +20,7 @@ public class RabbitMQProducer {
   @Value("${rabbitmq.binding.key}")
   String routingKey;
 
-  private RabbitTemplate rabbitTemplate;
+  final RabbitTemplate rabbitTemplate;
 
 
   public void sendMessage(String message){
