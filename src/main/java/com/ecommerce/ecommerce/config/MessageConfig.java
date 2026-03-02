@@ -1,4 +1,4 @@
-package com.ecommerce.ecommerce.internationalizationConfiguration;
+package com.ecommerce.ecommerce.config;
 
 import java.util.Locale;
 import org.springframework.context.MessageSource;

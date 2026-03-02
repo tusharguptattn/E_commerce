@@ -16,7 +16,6 @@ import java.util.Date;
 
 @Entity
 @Table(name = "orders")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "orderRegion")
 @NoArgsConstructor
 @Getter
 @Setter

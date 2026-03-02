@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "orderRegion")
 public class OrderProduct {
 
     @Id

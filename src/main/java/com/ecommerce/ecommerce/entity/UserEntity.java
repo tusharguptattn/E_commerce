@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 
 @Table(name = "users")
 @Entity
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "userRegion")
 @NoArgsConstructor
 @Getter
 @Setter

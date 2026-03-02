@@ -10,6 +10,8 @@ import com.ecommerce.ecommerce.securityConfig.SecurityUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,8 @@ public class CategoryService {
   ProductVariationRepo productVariationRepo;
 
 
+  @CacheEvict(value = {"customerCategories", "leafCategories", "categoryFilters",
+      "adminCategories"}, allEntries = true)
   @Transactional
   public void addMetaDataField(String fieldName) {
     CategoryMetaDataField byName = categoryMetaDataFieldRepo.findByName(fieldName);
@@ -45,20 +49,20 @@ public class CategoryService {
   }
 
 
-  public Page<CategoryMetadataFieldResponseDto> getAllMetadataFields(
-      String query,
-      Pageable pageable
-  ) {
+  public Page<CategoryMetadataFieldResponseDto> getAllMetadataFields(String query,
+      Pageable pageable) {
     if (query == null || query.isBlank()) {
       return categoryMetaDataFieldRepo.findAll(pageable).map(
           categoryMetaDataField -> new CategoryMetadataFieldResponseDto(
               categoryMetaDataField.getId(), categoryMetaDataField.getName()));
     }
-    return categoryMetaDataFieldRepo.findByNameContainingIgnoreCase(query, pageable)
-        .map(categoryMetaDataField -> new CategoryMetadataFieldResponseDto(
-            categoryMetaDataField.getId(), categoryMetaDataField.getName()));
+    return categoryMetaDataFieldRepo.findByNameContainingIgnoreCase(query, pageable).map(
+        categoryMetaDataField -> new CategoryMetadataFieldResponseDto(categoryMetaDataField.getId(),
+            categoryMetaDataField.getName()));
   }
 
+  @CacheEvict(value = {"customerCategories", "leafCategories", "categoryFilters",
+      "adminCategories"}, allEntries = true)
 
   @Transactional
   public Long addCategory(CategoryRequestDto categoryDto) {
@@ -109,43 +113,33 @@ public class CategoryService {
 
     while (currentParent != null) {
       parentHierarchy.add(
-          new ParentCategoryResponseDto(
-              currentParent.getCategoryId(),
-              currentParent.getName()
-          )
-      );
+          new ParentCategoryResponseDto(currentParent.getCategoryId(), currentParent.getName()));
       currentParent = currentParent.getParentCategory();
     }
 
-    List<ChildCategoryResponseDto> children =
-        categoryRepo.findByParentCategory_CategoryId(id)
-            .stream()
-            .map(child -> new ChildCategoryResponseDto(
-                child.getCategoryId(),
-                child.getName()
-            ))
-            .toList();
+    List<ChildCategoryResponseDto> children = categoryRepo.findByParentCategory_CategoryId(id)
+        .stream().map(child -> new ChildCategoryResponseDto(child.getCategoryId(), child.getName()))
+        .toList();
 
-    return new ViewCategoryResponse(category.getCategoryId(),
-        category.getName(),
-        parentHierarchy,
+    return new ViewCategoryResponse(category.getCategoryId(), category.getName(), parentHierarchy,
         children);
 
 
   }
-
 
   public Page<ChildCategoryResponseDto> viewAllCategories(String query, Pageable pageable) {
     if (query == null || query.isBlank()) {
       return categoryRepo.findAll(pageable).map(
           category -> new ChildCategoryResponseDto(category.getCategoryId(), category.getName()));
     } else {
-      return categoryRepo.findByNameContainingIgnoreCase(query, pageable)
-          .map(category -> new ChildCategoryResponseDto(category.getCategoryId(),
-              category.getName()));
+      return categoryRepo.findByNameContainingIgnoreCase(query, pageable).map(
+          category -> new ChildCategoryResponseDto(category.getCategoryId(), category.getName()));
     }
   }
 
+
+  @CacheEvict(value = {"customerCategories", "leafCategories", "categoryFilters",
+      "adminCategories"}, allEntries = true)
   @Transactional
   public void updateCategory(CategoryUpdateRequestDto categoryRequestDto) {
     CategoryEntity category = categoryRepo.findById(categoryRequestDto.id())
@@ -195,15 +189,16 @@ public class CategoryService {
 
   }
 
+
+  @CacheEvict(value = {"customerCategories", "leafCategories", "categoryFilters",
+      "adminCategories"}, allEntries = true)
   @Transactional
   public void updateMetaDataFieldValues(
       CategoryMetaDataFieldValueRequestDto categoryMetaDataFieldValueRequestDto) {
 
     // 1️⃣ Validate duplicate values in request (case-insensitive)
     Set<String> newValuesSet = categoryMetaDataFieldValueRequestDto.values().stream()
-        .map(String::trim)
-        .map(String::toLowerCase)
-        .collect(Collectors.toSet());
+        .map(String::trim).map(String::toLowerCase).collect(Collectors.toSet());
 
     if (newValuesSet.size() != categoryMetaDataFieldValueRequestDto.values().size()) {
       throw new BadRequest("Duplicate values in request are not allowed");
@@ -214,19 +209,15 @@ public class CategoryService {
 
     CategoryMetaDataFieldValues categoryMetaDataFieldValues = categoryMetaDataFieldValueRepo.findByCategoryEntity_CategoryIdAndCategoryMetaDataField_Id(
         categoryMetaDataFieldValueRequestDto.categoryId(),
-        categoryMetaDataFieldValueRequestDto.metaDataFieldId()
-    ).orElseThrow(
+        categoryMetaDataFieldValueRequestDto.metaDataFieldId()).orElseThrow(
         () -> new BadRequest("Metadata field values for the specified category not found"));
 
     Set<String> existingValues = Arrays.stream(categoryMetaDataFieldValues.getValues().split(","))
-        .map(String::trim)
-        .map(String::toLowerCase)
-        .collect(Collectors.toSet());
+        .map(String::trim).map(String::toLowerCase).collect(Collectors.toSet());
 
     for (String value : newValuesSet) {
       if (existingValues.contains(value.toLowerCase())) {
-        throw new BadRequest(
-            "Value '" + value + "' already exists for this metadata field");
+        throw new BadRequest("Value '" + value + "' already exists for this metadata field");
       }
     }
 
@@ -235,7 +226,7 @@ public class CategoryService {
     categoryMetaDataFieldValueRepo.save(categoryMetaDataFieldValues);
   }
 
-
+  @Cacheable("leafCategories")
   public List<LeafCategoryResponseDto> viewAllCategoriesLeaf() {
     List<CategoryEntity> leafCategories = categoryRepo.findLeafCategories();
     List<LeafCategoryResponseDto> leafCategoryResponseDtos = new ArrayList<>();
@@ -247,21 +238,12 @@ public class CategoryService {
       categoryMetaDataFieldValueRepo.findByCategoryEntity_CategoryId(category.getCategoryId())
           .forEach(entity -> {
             metadataFields.add(
-                new CategoryMetadataResponseDto(
-                    entity.getCategoryMetaDataField().getName(),
-                    Arrays.stream(entity.getValues().split(","))
-                        .map(String::trim)
-                        .toList()
-                )
-            );
+                new CategoryMetadataResponseDto(entity.getCategoryMetaDataField().getName(),
+                    Arrays.stream(entity.getValues().split(",")).map(String::trim).toList()));
           });
       leafCategoryResponseDtos.add(
-          new LeafCategoryResponseDto(
-              category.getCategoryId(),
-              category.getName(),
-              metadataFieldResponseDtoList,
-              metadataFields
-          ));
+          new LeafCategoryResponseDto(category.getCategoryId(), category.getName(),
+              metadataFieldResponseDtoList, metadataFields));
 
     }
 
@@ -269,17 +251,20 @@ public class CategoryService {
 
   }
 
+  @Cacheable(value = "customerCategories", key = "#categoryId")
   public List<CategoryMetadataFieldResponseDto> getAllCategoriesForCustomer(Long categoryId) {
     if (categoryId == null) {
       return categoryRepo.findByParentCategoryIsNull().stream()
-          .map(c -> new CategoryMetadataFieldResponseDto(c.getCategoryId(), c.getName())).toList();
+          .map(c -> new CategoryMetadataFieldResponseDto(c.getCategoryId(), c.getName()))
+          .collect(Collectors.toCollection(ArrayList::new));
     }
     return categoryRepo.findByParentCategory_CategoryId(categoryId).stream()
-        .map(c -> new CategoryMetadataFieldResponseDto(c.getCategoryId(), c.getName())).toList();
+        .map(c -> new CategoryMetadataFieldResponseDto(c.getCategoryId(), c.getName()))
+        .collect(Collectors.toCollection(ArrayList::new));
 
   }
 
-
+  @Cacheable(value = "categoryFilters", key = "#categoryId")
   public CategoryFilterResponseDto getFilteredCategoryData(Long categoryId) {
 
     CategoryEntity category = categoryRepo.findById(categoryId)
@@ -287,14 +272,9 @@ public class CategoryService {
 
     List<CategoryMetaDataFieldValues> byCategoryCategoryId = categoryMetaDataFieldValueRepo.findByCategoryEntity_CategoryId(
         categoryId);
-    List<MetadataFilterDto> metadataFilters = byCategoryCategoryId.stream()
-        .map(entity -> new MetadataFilterDto(
-            entity.getCategoryMetaDataField().getName(),
-            Arrays.stream(entity.getValues().split(","))
-                .map(String::trim)
-                .toList()
-        ))
-        .toList();
+    List<MetadataFilterDto> metadataFilters = byCategoryCategoryId.stream().map(
+        entity -> new MetadataFilterDto(entity.getCategoryMetaDataField().getName(),
+            Arrays.stream(entity.getValues().split(",")).map(String::trim).toList())).toList();
 
     // Brands
     List<Long> categoryIds = new ArrayList<>();
@@ -312,11 +292,7 @@ public class CategoryService {
     BigDecimal maxPrice = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
     PriceRangeDto priceRange = new PriceRangeDto(minPrice, maxPrice);
 
-    return new CategoryFilterResponseDto(
-        metadataFilters,
-        brands,
-        priceRange
-    );
+    return new CategoryFilterResponseDto(metadataFilters, brands, priceRange);
 
 
   }
@@ -327,9 +303,7 @@ public class CategoryService {
     CategoryEntity current = category.getParentCategory();
 
     while (current != null) {
-      parents.add(
-          new CategoryMetadataFieldResponseDto(current.getCategoryId(), current.getName())
-      );
+      parents.add(new CategoryMetadataFieldResponseDto(current.getCategoryId(), current.getName()));
       current = current.getParentCategory();
     }
 
@@ -346,8 +320,8 @@ public class CategoryService {
       CategoryEntity current = stack.pop();
       ids.add(current.getCategoryId());
 
-      List<CategoryEntity> children =
-          categoryRepo.findByParentCategory_CategoryId(current.getCategoryId());
+      List<CategoryEntity> children = categoryRepo.findByParentCategory_CategoryId(
+          current.getCategoryId());
 
       for (CategoryEntity child : children) {
         stack.push(child);

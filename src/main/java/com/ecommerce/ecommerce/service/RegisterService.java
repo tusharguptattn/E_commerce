@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce.service;
 
+import com.ecommerce.ecommerce.Publisher.RabbitMQProducer;
 import com.ecommerce.ecommerce.dto.SellerRequestDto;
 import com.ecommerce.ecommerce.dto.UserRequestDto;
 import com.ecommerce.ecommerce.entity.*;
@@ -36,6 +37,7 @@ public class RegisterService {
   TokenGeneration tokenGeneration;
   SellerRepo sellerRepo;
   CompanyAddressRepo companyAddressRepo;
+  RabbitMQProducer rabbitMQProducer;
 
 
   @Transactional
@@ -69,6 +71,8 @@ public class RegisterService {
 
     emailService.sendActivationEmail(userRequestDto.email(),
         tokenGeneration.generateToken(savedUser).getToken(), savedUser.getFirstName());
+
+    rabbitMQProducer.sendMessage("User has been registered successfully with name "+ savedUser.getFirstName());
 
 
   }

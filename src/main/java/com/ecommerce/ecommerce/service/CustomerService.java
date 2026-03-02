@@ -13,6 +13,7 @@ import com.ecommerce.ecommerce.repository.UserRepo;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class CustomerService {
   PasswordEncoder passwordEncoder;
   EmailService emailService;
 
-
+  @Cacheable(value = "customerProfile", key = "#userId")
   public CustomerViewMyProfileDto getProfile(Long userId) {
     UserEntity userEntity = userRepo.findById(userId)
         .orElseThrow(() -> new BadRequest("User not found"));

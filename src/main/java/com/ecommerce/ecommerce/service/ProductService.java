@@ -1,6 +1,5 @@
 package com.ecommerce.ecommerce.service;
 
-import com.ecommerce.ecommerce.dto.CategoryMetadataFieldResponseDto;
 import com.ecommerce.ecommerce.dto.ChildCategoryResponseDto;
 import com.ecommerce.ecommerce.dto.ProductRequestDto;
 import com.ecommerce.ecommerce.dto.ProductResponseDto;
@@ -36,15 +35,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -201,6 +200,10 @@ public class ProductService {
 
   }
 
+  @Cacheable(
+      value = "sellerProducts",
+      key = "#id + '-' + @securityUtil.getCurrentUserId()"
+  )
 
   public ProductResponseDto getProductById(Long id) {
     ProductEntity productEntity = productRepo.findById(id)
@@ -242,7 +245,6 @@ public class ProductService {
 
   }
 
-
   public Page<ProductResponseDto> getAllProducts(Pageable pageable) {
     Page<ProductEntity> bySellerUserId = productRepo.findBySeller_User_Id(
         securityUtil.getCurrentUserId(), pageable);
@@ -272,7 +274,7 @@ public class ProductService {
             productVariations.getId(), productVariations.getMetadata(),
             productVariations.getQuantityAvailable(), productVariations.getPrice()));
   }
-
+  @CacheEvict(value = {"customerProducts","sellerProducts","allProducts","categoryProducts"},allEntries = true)
   @Transactional
   public void deleteProduct(Long id) {
     ProductEntity productEntity = productRepo.findById(id)
@@ -289,10 +291,10 @@ public class ProductService {
     productRepo.save(productEntity);
   }
 
-
+  @CacheEvict(value = {"customerProducts","sellerProducts","allProducts","categoryProducts"},allEntries = true)
   @Transactional
   public void updateProduct(ProductUpdateRequestDto productUpdateRequestDto) {
-    ProductEntity productEntity = productRepo.findById(productUpdateRequestDto.ProductId())
+    ProductEntity productEntity = productRepo.findById(productUpdateRequestDto.productId())
         .orElseThrow(() -> new BadRequest("No Product found with this id"));
     if (!productEntity.getSeller().getUser().getId().equals(securityUtil.getCurrentUserId())) {
       throw new BadRequest("Unauthorized access of product");
@@ -400,7 +402,7 @@ public class ProductService {
 
   }
 
-
+  @Cacheable(value = "customerProducts", key = "#productId")
   public ProductResponseForCustomer getProductByIdForCustomer(Long productId) {
     ProductEntity productEntity = productRepo.findById(productId)
         .orElseThrow(() -> new BadRequest("product id is invalid"));
@@ -429,7 +431,6 @@ public class ProductService {
         productEntity.getDescription(), categoryResponseDto, list);
 
   }
-
 
   public Page<ProductResponseForCustomer> getAllProductForCategory(Long categoryId, String query,
       Pageable pageable) {

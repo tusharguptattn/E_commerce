@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "sellerRegion")
 public class SellerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "seller_seq")

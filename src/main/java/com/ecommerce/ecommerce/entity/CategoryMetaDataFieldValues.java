@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "CATEGORY_METADATA_FIELD_VALUES")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "categoryRegion")
 public class CategoryMetaDataFieldValues {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "category_metadata_value_seq")

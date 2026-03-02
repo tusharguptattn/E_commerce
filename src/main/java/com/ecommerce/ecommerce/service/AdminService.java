@@ -26,7 +26,6 @@ public class AdminService {
     private final SellerRepo sellerRepo;
     private final EmailService emailService;
 
-
     public Page<CustomerResponseDto> getAllRegisteredCustomers(Pageable pageable){
         Page<UserResponseDto> customer = userRepo.findByRoles_Authority("ROLE_CUSTOMER", pageable);
         return customer.map(userEntity -> new CustomerResponseDto(
@@ -37,7 +36,6 @@ public class AdminService {
         );
 
     }
-
 
 
     public Page<SellerResponseDto> getAllRegisteredSeller(Pageable pageable){

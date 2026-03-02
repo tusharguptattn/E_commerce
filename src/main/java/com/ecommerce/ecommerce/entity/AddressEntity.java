@@ -12,7 +12,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE,region = "addressRegion")
 @Table(name = "addresses")
 @NoArgsConstructor
 @Getter
